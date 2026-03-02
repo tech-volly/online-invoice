@@ -125,9 +125,9 @@ return [
 
 
     'superadmin_id'=>env('SUPERADMIN_ID',1),
-    'admin_email'=>env('ADMIN_EMAIL', 'accounts@hdsfinancials.com.au'),
-    'cc_admin_email'=>env('CC_ADMIN_EMAIL', 'chirag_loren@yahoo.com'),
-    'from_email_address' => env('MAIL_FROM_ADDRESS', 'accounts@hdsfinancials.com.au'),
+    'admin_email'=>env('ADMIN_EMAIL'),
+    'cc_admin_email'=>env('CC_ADMIN_EMAIL'),
+    'from_email_address' => env('MAIL_FROM_ADDRESS'),
 
 
     /*

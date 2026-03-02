@@ -67,8 +67,10 @@ class User extends Authenticatable
             $details = [
                 'title' => 'HDS Financials',
                 'code' => $code
-            ];             
-            Mail::to(auth()->user()->email)->cc(config('app.cc_admin_email'))->send(new SendCodeMail($details));
+            ];    
+            if(app()->environment() == "production") {
+                Mail::to(auth()->user()->email)->cc(config('app.cc_admin_email'))->send(new SendCodeMail($details));
+            }
             // $save_activity = [
             //     'email_sender' => config('app.from_email_address'),
             //     'email_receiver' => auth()->user()->email,

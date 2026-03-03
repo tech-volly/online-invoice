@@ -1,12 +1,32 @@
 $(document).ready(function () {
-    if($('#expenseDataTable').length > 0) {
+    if ($('#expenseDataTable').length > 0) {
         var expenseTable = $('#expenseDataTable').DataTable({
             "bFilter": true,
             "aaSorting": [],
             'columnDefs': [{
-                'targets': [0,8, 9],
+                'targets': [0, 8, 9],
                 'orderable': false,
             }],
+            processing: true,
+            serverSide: true,
+            pageLength: 2, // default limit
+            ajax: {
+                url: base_url + 'expenses/get-data',
+                type: 'GET'
+            },
+            columns: [
+                { data: 'id' },
+                { data: 'business_name' },
+                { data: 'invoice' },
+                { data: 'project_name' },
+                { data: 'expense_date' },
+                { data: 'amount' },
+                { data: 'gst' },
+                { data: 'payment_method' },
+                { data: 'category' },
+                { data: 'receipt', orderable: false, searchable: false },
+                { data: 'action', orderable: false, searchable: false }
+            ]
         });
     }
 
@@ -15,10 +35,10 @@ $(document).ready(function () {
         keyboard: false
     });
 
-    $('#expenseDataTable').on('click', '.deleteExpenseBtn', function(e) {
+    $('#expenseDataTable').on('click', '.deleteExpenseBtn', function (e) {
         e.preventDefault();
         var id = $(this).attr('data-id');
-        var url = base_url + 'expenses/delete/'+id;
+        var url = base_url + 'expenses/delete/' + id;
         swal({
             title: "Are you sure?",
             text: "Once deleted, you will not be able to recover this expense details!",
@@ -50,21 +70,21 @@ $(document).ready(function () {
     });
 
     $('.image-link').magnificPopup({
-        type:'image',
+        type: 'image',
         closeOnContentClick: true,
-		mainClass: 'mfp-img-mobile',
-		image: {
-			verticalFit: true
-		}
+        mainClass: 'mfp-img-mobile',
+        image: {
+            verticalFit: true
+        }
     });
 
     $('.doc-link').magnificPopup({
-        type:'iframe',
+        type: 'iframe',
         closeOnContentClick: true,
-		mainClass: 'mfp-img-mobile',
-		image: {
-			verticalFit: true
-		}
+        mainClass: 'mfp-img-mobile',
+        image: {
+            verticalFit: true
+        }
     });
 
     //Delete selected records

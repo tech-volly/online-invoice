@@ -52,68 +52,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach($data as $key => $v)
-                    <tr id="expenserow_{{$v->id}}">
-                        <td>
-                            <div class="checkbox">
-                                <input type="checkbox" id="chk{{$v->id}}" class="custom-control-input cb-element" value="{{$v->id}}" aria-invalid="false"> 
-                                <label for="chk{{$v->id}}"></label>
-                            </div>
-                        </td>
-                        <td>{{ $v->supplier ? $v->supplier->supplier_business_name : '' }}</td>
-                        <td>{{ $v->supplier_invoice_number }}</td>
-                        <td>{{ $v->project_name }}</td>
-                        <td>{{ getFormatedDate($v->expense_date) }}</td>
-                        <td>{{ getPrice($v->expense_amount) }}</td>
-                        <td>{{ getGstPriceForExpense($v->expense_tax, $v->expense_amount) }}</td>
-                        <td>{{ getPaymentMethodName($v->payment_method_id) }}</td>
-                        <td>{{ getExpenseCategory($v->supplier_expense_category) }}</td>
-                        <td>
-                            <h2 class="table-avatar">
-                                <?php 
-                                    $extension = explode(".",$v->expense_attached_receipt);
-                                ?>
-                                @if($v->expense_attached_receipt)
-                                    @if($extension[1] == 'png' || $extension[1] == 'jpg' || $extension[1] == 'jpeg' || $extension[1] == 'heic')
-                                        <a href="{{URL::asset('public/uploads/expenses/'.$v->id.'/'.$v->expense_attached_receipt)}}" class="avatar brand-custom image-link">
-                                            <img src="{{URL::asset('public/uploads/expenses/'.$v->id.'/'.$v->expense_attached_receipt)}}" alt="" style="height: 45px;width: 45px;">
-                                        </a>
-                                    @elseif($extension[1] == 'pdf')
-                                        <a target="_blank" href="{{URL::asset('public/uploads/expenses/'.$v->id.'/'.$v->expense_attached_receipt)}}" class="btn btn-primary">
-                                            <i class="fa fa-file-pdf-o m-r-5" style="color:white;"></i>
-                                        </a>
-                                    @else
-                                        <a class="btn btn-primary" download="{{$v->expense_attached_receipt}}"
-                                            href="{{URL::asset('public/uploads/expenses/'.$v->id.'/'.$v->expense_attached_receipt)}}">
-                                            <i class="fa fa-download" style="color:white;"></i>
-                                        </a>
-                                    @endif
-                                @else
-                                <a href="{{URL::asset('public/assets/img/profiles/avatar-01.jpg')}}" class="avatar brand-custom image-link">
-                                    <img src="{{URL::asset('public/assets/img/profiles/avatar-01.jpg')}}" alt="" style="height: 45px;width: 45px;">
-                                </a>
-                                @endif
-                            </h2>
-                        </td>
-                        <td class="text-center">
-                            <div class="dropdown dropdown-action">
-                                <a href="#" class="action-icon dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false"><i class="material-icons">more_vert</i></a>
-                                <div class="dropdown-menu dropdown-menu-right">
-                                    @can('expense-edit')
-                                    <a class="dropdown-item" href="{{route('expenses.edit', $v->id)}}">
-                                        <i class="fa fa-pencil m-r-5"></i> Edit
-                                    </a>
-                                    @endcan
-                                    @can('expense-delete')
-                                    <a class="dropdown-item deleteExpenseBtn" href="javascript:void(0)" data-id="{{$v->id}}">
-                                        <i class="fa fa-trash-o m-r-5"></i> Delete
-                                    </a>
-                                    @endcan
-                                </div>
-                            </div>
-                        </td>
-                    </tr>
-                    @endforeach
+                   
                 </tbody>
             </table>
         </div>

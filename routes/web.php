@@ -120,6 +120,8 @@ Route::group(['middleware' => ['auth']], function() {
         Route::get('/export-expenses', [ExpenseController::class, 'exportExpenses'])->name('expenses.export-expenses');
         Route::get('/export-sample-file', [ExpenseController::class, 'exportSampleExpenseFile'])->name('expenses.export-sample-file');
         Route::post('/import-expenses', [ExpenseController::class, 'importExpenses'])->name('expenses.import-expenses');
+
+        Route::get('/get-data', [ExpenseController::class, 'getExpenses']);
     });
 
     Route::group(['prefix' => 'expected-expenses'], function() {

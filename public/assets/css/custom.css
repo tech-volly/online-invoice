@@ -1,0 +1,172 @@
+.plus-btn {
+    /* height: 36px;
+    position: absolute;
+    right: 0px;
+    top: 40px;
+    width: 37px; */
+    height: 36px;
+    position: absolute;
+    right: 18px;
+    top: 57px;
+    width: 37px;
+}
+.add-more-contact {
+    padding: 20px;
+    border: 1px solid #e3e3e3;
+}
+.btn-xs {
+    padding: 1px 5px;
+    font-size: 12px;
+    width: 23px;
+    height: 22px;
+}
+.pull-right {
+    float: right;
+    position: relative;
+    left: 8px;
+    top: -20px
+}
+.error-custom{
+    margin-left: 25%
+}
+.invoice-table{
+    max-width: 327px;
+    width: 398px;
+    float: right;
+}
+.subscription-table{
+    max-width: 327px;
+    width: 398px;
+    float: right;
+}
+.quote-table{
+    max-width: 327px;
+    width: 398px;
+    float: right;
+}
+.brand-custom{
+    background-color: transparent !important;
+}
+.exportbtn-custom {
+    margin-left: 5px
+}
+.dt-buttons.btn-group.flex-wrap {
+    width: auto;
+    margin-bottom: 0;
+}
+.preview-image {
+    height: auto;
+    width: 100%;            
+}
+
+
+.resource-images {
+    position: relative;
+}
+.icon-style {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    left: auto;
+}
+.resource-images i.fa {
+    /* position: absolute;
+    left: auto;
+    right: 8px; */
+    color: #fff;
+    /* top: 8px; */
+    font-size: 15px;
+    width: 30px;
+    height: 30px;
+    background: #ff9b44;
+    text-align: center;
+    line-height: 29px;
+    border-radius: 50px;
+}
+.ck-editor__editable_inline {
+    min-height: 300px;
+ }
+ .account-logo h4 {
+    color: #44B994;
+}
+.report-btn{
+    text-transform: none !important;
+    min-height: auto !important;
+    padding: 10px !important;
+}
+
+/*** Dashboard datatable css starts ***/
+div#unPaidInvoices_length {
+    padding: 15px 0 5px 15px;
+}
+div#unPaidInvoices_filter {
+    padding: 15px 15px 5px 0;
+}
+div#unPaidInvoices_info {
+    padding: 10px 0 5px 15px;
+}
+div#unPaidInvoices_paginate {
+    padding: 0px 15px 15px 15px;
+}
+div#recurringInvoiceTable_length {
+    padding: 15px 0 5px 15px;
+}
+div#recurringInvoiceTable_filter {
+    padding: 15px 15px 5px 0;
+}
+div#recurringInvoiceTable_info {
+    padding: 10px 0 5px 15px;
+}
+div#recurringInvoiceTable_paginate {
+    padding: 0px 15px 15px 15px;
+}
+
+div#quotesTable_length {
+    padding: 15px 0 5px 15px;
+}
+div#quotesTable_filter {
+    padding: 15px 15px 5px 0;
+}
+div#quotesTable_info {
+    padding: 10px 0 5px 15px;
+}
+div#quotesTable_paginate {
+    padding: 0px 15px 15px 15px;
+}
+/*** Dashboard datatable css ends ***/
+
+.filter-btn{
+    text-transform: none !important;
+    min-height: auto !important;
+    padding-left: 5px !important;
+    padding-right: 5px !important;
+}
+table.datatable td {
+    white-space: normal;
+}
+.purple-white {
+    background-color: #667eea !important;
+    color: #FFF;
+}
+
+
+.expense-category span.select2-selection.select2-selection--multiple {
+    display: block;
+    width: 100%;
+    /* padding: 0.375rem 0.75rem; */
+    font-size: 1rem;
+    font-weight: 400;
+    line-height: 1.5;
+    color: #212529;
+    background-color: #fff;
+    background-clip: padding-box;
+    border: 1px solid #ced4da;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    border-radius: 0.25rem;
+    transition: border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+    height: 75px;
+    padding: 0px 12px 6px;
+    overflow-y: auto;
+}

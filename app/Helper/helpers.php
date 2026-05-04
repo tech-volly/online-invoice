@@ -1,5 +1,6 @@
 <?php
 
+use App\Mail\InvoiceReminderMail;
 use App\Models\Category;
 use App\Models\Supplier;
 use App\Models\ExpenseCategory;
@@ -15,12 +16,13 @@ use App\Models\Expense;
 use App\Models\EmailLog;
 use App\Models\InvoiceResourceImage;
 use App\Mail\SendInvoiceMail;
+use Barryvdh\DomPDF\PDF as DomPDFPDF;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Mail;
-use PDF;
-use File;
-use DB;
+use Illuminate\Support\Facades\DB;
+use Symfony\Component\HttpFoundation\File\File;
 
 function getFormatedDate($date = "", $format = 'd F, Y') {
     if ($date == "") {
@@ -78,17 +80,20 @@ function getExpenseCategory($id) {
     return $category ? $category->name : '';
 }
 
-function getSupplierName($id) {
+function getSupplierName($id)
+{
     $supplier = Supplier::find($id);
     return $supplier ? $supplier->supplier_first_name . ' ' . $supplier->supplier_last_name : '';
 }
 
-function getPaymentMethodName($id) {
+function getPaymentMethodName($id)
+{
     $payment_method = PaymentMethod::find($id);
     return $payment_method ? $payment_method->payment_method_name : '';
 }
 
-function getLeadFollowUpDetails($lead_id, $val = "Y") {
+function getLeadFollowUpDetails($lead_id, $val = "Y")
+{
     $lead_followup = LeadFollowUp::whereLeadId($lead_id)->orderBy('id', 'desc')->first();
     if ($val == "Y") {
         return $lead_followup ? ($lead_followup->followup_datetime ? getFormatedDate($lead_followup->followup_datetime) : '') : '';
@@ -96,15 +101,17 @@ function getLeadFollowUpDetails($lead_id, $val = "Y") {
     return $lead_followup ? ($lead_followup->followup_datetime ? changeDateFormatAtExport($lead_followup->followup_datetime) : '') : '';
 }
 
-function getLeadDiscussionDate($lead_id, $val = "Y") {
+function getLeadDiscussionDate($lead_id, $val = "Y")
+{
     $lead_discussion = LeadFollowUp::whereLeadId($lead_id)->orderBy('id', 'desc')->first();
-    if ($val == "Y") { 
-        return $lead_discussion ? ($lead_discussion->lead_discussion_date ? getFormatedDate($lead_discussion->lead_discussion_date) : '' ) : '';    
+    if ($val == "Y") {
+        return $lead_discussion ? ($lead_discussion->lead_discussion_date ? getFormatedDate($lead_discussion->lead_discussion_date) : '') : '';
     }
-    return $lead_discussion ? ($lead_discussion->lead_discussion_date ? changeDateFormatAtExport($lead_discussion->lead_discussion_date) : '' ) : '';
+    return $lead_discussion ? ($lead_discussion->lead_discussion_date ? changeDateFormatAtExport($lead_discussion->lead_discussion_date) : '') : '';
 }
 
-function generateRandomPassword() {
+function generateRandomPassword()
+{
     $comb = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890';
     $pass = array();
     $combLen = strlen($comb) - 1;
@@ -115,7 +122,8 @@ function generateRandomPassword() {
     return implode($pass);
 }
 
-function getCalculatedPrice($tax_type, $product_price) {
+function getCalculatedPrice($tax_type, $product_price)
+{
     if ($tax_type == 'GST Inclusive') {
         // $product_gst_value = $product_price * 11 / (100 + 11);
         $product_gst_value = $product_price / 11;
@@ -139,20 +147,22 @@ function getCalculatedPrice($tax_type, $product_price) {
     return $success;
 }
 
-function getGstPriceForExpense($tax_type, $amount, $symbol = "Y") {
+function getGstPriceForExpense($tax_type, $amount, $symbol = "Y")
+{
     if ($tax_type == 'GST Inclusive') {
         // $gst_value = $amount * 11 / (100 + 11);
         $gst_value = $amount / 11;
-    }else if($tax_type == 'No GST') {
+    } else if ($tax_type == 'No GST') {
         $gst_value = 0;
-    }else {
+    } else {
         $gst_value = 0;
     }
 
     return getPrice($gst_value, $symbol);
 }
 
-function getSubscriptionNextDate($subscription_cycle, $subscription_start_date) {
+function getSubscriptionNextDate($subscription_cycle, $subscription_start_date)
+{
     if ($subscription_cycle == 'daily') {
         $start_date = Carbon::create($subscription_start_date);
         $next_date = $start_date->addDay();
@@ -173,19 +183,22 @@ function getSubscriptionNextDate($subscription_cycle, $subscription_start_date) 
     return $next_date;
 }
 
-function getGeneratedSubscriptionCount($subscription_id) {
+function getGeneratedSubscriptionCount($subscription_id)
+{
     $invoices = Invoice::whereSubscriptionId($subscription_id)->count();
     return $invoices;
 }
 
-function getNextAmountForSubscription($id) {
+function getNextAmountForSubscription($id)
+{
     $subscription = Subscription::whereId($id)->with(['subscription_payments'])->first();
     $grand_total = calculateIncrementedPrice($subscription);
 
     return $grand_total;
 }
 
-function calculateIncrementedPrice($subscription) {
+function calculateIncrementedPrice($subscription)
+{
     $inclusive_tax_amt_final = 0;
     $final_total_final = 0;
     $ex_product_total_final = 0;
@@ -203,17 +216,17 @@ function calculateIncrementedPrice($subscription) {
     $ng_item_total = 0;
 
     $generated_invoice = getGeneratedSubscriptionCount($subscription->id);
-    
+
     foreach ($subscription->subscription_payments as $subscription_payment) {
         $tax_type = $subscription_payment->tax_selection;
         $product_quantity = $subscription_payment->product_quantity;
-        if($generated_invoice > 0 && $subscription->is_subscription_next_increment == 1) {
+        if ($generated_invoice > 0 && $subscription->is_subscription_next_increment == 1) {
             $increment = $subscription->subscription_incremented_percentage;
             $unit_price = ($subscription_payment->product_unit_price * $increment) / 100;
             $increment_unit_price = $subscription_payment->product_unit_price + $unit_price;
-        }else if ($generated_invoice == 0 && $subscription->is_subscription_next_increment == 1){
+        } else if ($generated_invoice == 0 && $subscription->is_subscription_next_increment == 1) {
             $increment_unit_price = $subscription_payment->product_unit_price;
-        }else {
+        } else {
             $increment_unit_price = $subscription_payment->product_unit_price;
         }
 
@@ -242,7 +255,8 @@ function calculateIncrementedPrice($subscription) {
     return $grand_total;
 }
 
-function sendEmailOfGeneratedInvoice($invoice) {
+function sendEmailOfGeneratedInvoice($invoice)
+{
     $generated_invoice = Invoice::with(['client', 'brand', 'invoice_payments.product'])->whereId($invoice->id)->first();
     $invoice_setting = InvoiceSetting::first();
     $data = [
@@ -261,22 +275,23 @@ function sendEmailOfGeneratedInvoice($invoice) {
     ];
 
     $all_cc_emails_arr = [];
-    if($invoice->invoice_emails) { 
+    if ($invoice->invoice_emails) {
         $temp_arr = explode(",", $invoice->invoice_emails);
-        foreach($temp_arr as $temp) {
-            array_push($all_cc_emails_arr, trim($temp));    
+        foreach ($temp_arr as $temp) {
+            array_push($all_cc_emails_arr, trim($temp));
         }
         array_push($all_cc_emails_arr, config('app.cc_admin_email'));
-    }else {
+    } else {
         $all_cc_emails_arr = [config('app.cc_admin_email')];
     }
     $clientEmailsArray = explode(',', $generated_invoice->client->client_email);
     Mail::to($clientEmailsArray)->cc($all_cc_emails_arr)->send(new SendInvoiceMail($details));
-    
+
     $save_activity = [
         'email_sender' => config('app.from_email_address'),
         'email_receiver' => $generated_invoice->client->client_email,
-        'email_content' => 'Invoice #'.$details['invoice_number'].' from S & P Family Trust Trading as HDS',
+        // 'email_content' => 'Invoice #' . $details['invoice_number'] . ' from S & P Family Trust Trading as HDS',
+        'email_content' => 'Invoice #' . $details['invoice_number'] . ' from ' . config('app.name'),
         'email_send_date' => Carbon::now()->format('Y-m-d H:i:s')
     ];
     $create_log = saveEmailActivity($save_activity);
@@ -289,45 +304,103 @@ function sendEmailOfGeneratedInvoice($invoice) {
     return $return;
 }
 
-function getPaymentStatusId() {
+function sendInvoiceReminderEmail($invoice)
+{
+    $invoiceSetting = InvoiceSetting::first();
+    $pdf = PDF::loadView('invoices.invoice-pdf', [
+        'invoice' => $invoice,
+        'invoice_setting' => $invoiceSetting
+    ]);
+
+    $pdfPath = 'public/invoices/' . $invoice->id . '/' . $invoice->invoice_number . '.pdf';
+    Storage::put($pdfPath, $pdf->output());
+
+    $toEmails = [];
+    if ($invoice->invoice_emails) {
+        $tempEmails = explode(',', $invoice->invoice_emails);
+        foreach ($tempEmails as $email) {
+            $email = trim($email);
+            if ($email) {
+                $toEmails[] = $email;
+            }
+        }
+    }
+    if (empty($toEmails) && $invoice->client && $invoice->client->client_email) {
+        $toEmails[] = $invoice->client->client_email;
+    }
+
+    if (empty($toEmails)) {
+        return 0;
+    }
+
+    $details = [
+        'userName' => $invoice->client->client_business_name,
+        'file' => storage_path('app/' . $pdfPath),
+        'invoice_number' => $invoice->invoice_number,
+        'invoice_sent_date' => $invoice->invoice_sent_date,
+        'invoice_date' => $invoice->invoice_date,
+        'invoice_due_date' => $invoice->invoice_due_date,
+        'invoice_total_formatted' => number_format($invoice->invoice_grand_total, 2),
+
+    ];
+
+    try {
+        Mail::to($toEmails)->send(new InvoiceReminderMail($details));
+        $invoice->invoice_reminder_sent_at = now();
+        $invoice->save();
+
+        return 1;
+    } catch (\Exception $exception) {
+        Log::error('Failed to send invoice reminder for invoice ' . $invoice->invoice_number . ': ' . $exception->getMessage());
+        Log::error('Exception trace: ' . $exception->getTraceAsString());
+        return 0;
+    }
+}
+
+function getPaymentStatusId()
+{
     $payment_status = PaymentStatus::whereName('Unpaid')->first();
 
     return $payment_status->id;
 }
 
-function getPaidPaymentStatusId() {
+function getPaidPaymentStatusId()
+{
     $payment_status = PaymentStatus::whereName('Paid')->first();
 
-    return $payment_status->id;   
+    return $payment_status->id;
 }
 
-function getPaymentStatusName($id) {
+function getPaymentStatusName($id)
+{
     $payment_status = PaymentStatus::whereId($id)->first();
 
-    return $payment_status->name;   
+    return $payment_status->name;
 }
 
-function getPrice($num = "", $symbol = "Y") {
-    if($symbol == "Y") {
+function getPrice($num = "", $symbol = "Y")
+{
+    if ($symbol == "Y") {
         $num = number_format($num, 2);
     }
     $num_exp = explode(".", $num);
     $num = $num_exp[0];
-    
-    if(@$num_exp[1] == "00" || @$num_exp[1] == "") {
+
+    if (@$num_exp[1] == "00" || @$num_exp[1] == "") {
         $decimal = "";
     } else {
         $decimal = "." . str_pad(@$num_exp[1], 2, 0, STR_PAD_RIGHT);
     }
-    if($symbol == "Y") {
+    if ($symbol == "Y") {
         $thecash = '$ ' . $num . $decimal;
-    }else {
+    } else {
         $thecash = $num . $decimal;
     }
     return $thecash;
 }
 
-function getSEOData($data = []) {
+function getSEOData($data = [])
+{
     if (!isset($data['seo_title'])) {
         $seo_data['seo_title'] = "HDS Financials";
     } else {
@@ -383,22 +456,23 @@ function getSEOData($data = []) {
         $seo_data['seo_title'] = "HDS Estimate Settings";
     } else if ($route_name == "reports") {
         $seo_data['seo_title'] = "HDS Reports";
-    } else if($route_name == "email-logs") {
-        $seo_data['seo_title'] = "HDS Email Logs";   
-    } else if($route_name == "expected-expenses" || $route_name == "expected-expenses.edit") {
-        $seo_data['seo_title'] = "HDS Expected Expenses";   
+    } else if ($route_name == "email-logs") {
+        $seo_data['seo_title'] = "HDS Email Logs";
+    } else if ($route_name == "expected-expenses" || $route_name == "expected-expenses.edit") {
+        $seo_data['seo_title'] = "HDS Expected Expenses";
     }
     $seo_data['seo_title'] = $seo_data['seo_title'];
-    
+
     return $seo_data;
 }
 
-function getProfitForQuarterReport($net_profit, $income) {
-    if($net_profit == 0) {
+function getProfitForQuarterReport($net_profit, $income)
+{
+    if ($net_profit == 0) {
         $profit = 0;
-    }else if($income == 0) {
+    } else if ($income == 0) {
         $profit = 0;
-    }else {
+    } else {
         $res = ($net_profit / $income) * 100;
         $profit = round($res, 2);
     }
@@ -406,7 +480,8 @@ function getProfitForQuarterReport($net_profit, $income) {
     return $profit;
 }
 
-function getInvoiceProductCategories($id) {
+function getInvoiceProductCategories($id)
+{
     $invoice_payments = InvoicePayment::whereInvoiceId($id)->get();
     $products_id = array_column($invoice_payments->toArray(), 'product_id');
     $product_categories = DB::table('products')
@@ -415,31 +490,35 @@ function getInvoiceProductCategories($id) {
         ->select('categories.name as category_name')
         ->get();
 
-    $categories = implode(', ' ,array_unique(array_column($product_categories->toArray(), 'category_name')));
-    
+    $categories = implode(', ', array_unique(array_column($product_categories->toArray(), 'category_name')));
+
     return $categories;
 }
 
-function splitYearMonth($date) {
+function splitYearMonth($date)
+{
     $split_date = explode("-", $date);
     $formatted_date = $split_date[1] . '-' . $split_date[0];
-    
+
     return $formatted_date;
 }
 
-function splitYear($date) {
+function splitYear($date)
+{
     $split_date = explode("-", $date);
-    
+
     return $split_date[1];
 }
 
-function formatPrice($price) {
+function formatPrice($price)
+{
     $thecash = floatval(preg_replace('/[^\d.]/', '', $price));
 
     return $thecash;
 }
 
-function removedExtraSymbolsFromPrice($price) {
+function removedExtraSymbolsFromPrice($price)
+{
     $replace_dollar = str_replace('$ ', '', $price);
     $replace_comma = str_replace(',', '', $replace_dollar);
 
@@ -447,14 +526,15 @@ function removedExtraSymbolsFromPrice($price) {
 }
 
 // Helper functions for dashboard starts
-function gstPaidByQuarter($q_start_date, $q_end_date) {
+function gstPaidByQuarter($q_start_date, $q_end_date)
+{
     $expense_gst_paid = Expense::whereBetween('expense_date', [$q_start_date, $q_end_date])->get();
     $q_gst_paid = 0;
-    foreach($expense_gst_paid as $key => $value) {
+    foreach ($expense_gst_paid as $key => $value) {
         if ($value->expense_tax == 'GST Inclusive') {
             // $q_gst_paid += $value->expense_amount * 11 / (100 + 11);
             $q_gst_paid += $value->expense_amount / 11;
-        }else if($value->expense_tax == 'No GST') {
+        } else if ($value->expense_tax == 'No GST') {
             $q_gst_paid +=  0;
         }
     }
@@ -462,7 +542,8 @@ function gstPaidByQuarter($q_start_date, $q_end_date) {
     return $q_gst_paid;
 }
 
-function gstCollectedByQuarter($q_start_date, $q_end_date) {
+function gstCollectedByQuarter($q_start_date, $q_end_date)
+{
     $income_collected_gst = DB::table('invoices')->whereBetween('invoice_payment_date', [$q_start_date, $q_end_date])
         ->where('invoices.deleted_at', '=', null)->select(DB::raw("SUM(invoice_grand_gst) as invoice_grand_gst"))
         ->get();
@@ -470,33 +551,38 @@ function gstCollectedByQuarter($q_start_date, $q_end_date) {
     return $income_collected_gst[0]->invoice_grand_gst;
 }
 
-function totalIncomeByQuarter($q_start_date, $q_end_date) {
+function totalIncomeByQuarter($q_start_date, $q_end_date)
+{
     $q_income = DB::table('invoices')->whereBetween('invoice_payment_date', [$q_start_date, $q_end_date])
         ->where('invoices.deleted_at', '=', null)->select(DB::raw('sum(invoices.invoice_grand_total) as q_total_income'))->get();
 
     return $q_income[0]->q_total_income;
 }
 
-function totalExpenseByQuarter($q_start_date, $q_end_date) {
+function totalExpenseByQuarter($q_start_date, $q_end_date)
+{
     $q_expense = DB::table('expenses')->whereBetween('expense_date', [$q_start_date, $q_end_date])
         ->where('expenses.deleted_at', '=', null)->select(DB::raw('sum(expenses.expense_amount) as q_total_expense'))->get();
 
     return $q_expense[0]->q_total_expense;
 }
 
-function totalProfitByQuarter($income, $expense) {
+function totalProfitByQuarter($income, $expense)
+{
     $net_profit = $income - $expense;
 
     return $net_profit;
 }
 
-function getExpenseCategoryId($category_name) {
+function getExpenseCategoryId($category_name)
+{
     $category = ExpenseCategory::whereName($category_name)->first();
 
     return $category ? $category->id : 0;
 }
 
-function getCategoryExpense($category_id) {
+function getCategoryExpense($category_id)
+{
     $expense =  DB::table('expenses')->where('expenses.supplier_expense_category', $category_id)
         ->where('expenses.deleted_at', '=', null)
         ->select(DB::raw("SUM(expense_amount) as category_expense"))
@@ -506,13 +592,15 @@ function getCategoryExpense($category_id) {
 }
 // Helper functions for dashboard ends
 
-function saveEmailActivity($request) {
+function saveEmailActivity($request)
+{
     $create_log = EmailLog::create($request);
 
     return $create_log;
 }
 
-function getRoundedAmount($X = 0) {
+function getRoundedAmount($X = 0)
+{
     $ip_exp = explode(".", $X);
 
     $IP = $ip_exp[0];
@@ -532,19 +620,19 @@ function getRoundedAmount($X = 0) {
     switch ($FP2) {
         case 0:
             break;
-        Case 1:
-        Case 2:
-        Case 3:
+        case 1:
+        case 2:
+        case 3:
             $FP2 = 0;
             break;
-        Case 4:
-        Case 5:
-        Case 6:
-        Case 7:
+        case 4:
+        case 5:
+        case 6:
+        case 7:
             $FP2 = 5;
             break;
-        Case 8:
-        Case 9:
+        case 8:
+        case 9:
             $FP2 = 0;
             $FP1++;
             break;
@@ -558,46 +646,48 @@ function getRoundedAmount($X = 0) {
     } else {
         $Y = $IP . "." . $FP1 . $FP2;
     }
-    
+
     $round_amount = 0.00;
     if ($X > $Y) {
-        $round_amount = "- " . ( ( floor($X * 100) - floor($Y * 100) ) / 100 );
+        $round_amount = "- " . ((floor($X * 100) - floor($Y * 100)) / 100);
     } else {
-        $round_amount = ( ( floor($Y * 100) - floor($X * 100) ) / 100 );
+        $round_amount = ((floor($Y * 100) - floor($X * 100)) / 100);
     }
-    
+
     $return['amount'] = $Y;
     $return['round_amount'] = $round_amount;
-    
+
     return $return;
 }
 
-function getFirstResource($id) {
+function getFirstResource($id)
+{
     $invoice_resource = InvoiceResourceImage::whereInvoiceResourceId($id)->first();
 
     return $invoice_resource;
 }
 
-function getExpectedExpenseData($current_year, $next_year, $fields1, $fields2) {
-    $expected_fin_year = $current_year.' - '.$next_year;
+function getExpectedExpenseData($current_year, $next_year, $fields1, $fields2)
+{
+    $expected_fin_year = $current_year . ' - ' . $next_year;
     $expected_expense_data_1 = DB::table('expected_expenses')->where('expected_expenses.expected_expense_year', $expected_fin_year)
         ->leftjoin('expected_expense_lists', 'expected_expense_lists.expected_expense_id', '=', 'expected_expenses.id')
         ->where('expected_expenses.deleted_at', '=', null)
         ->where('expected_expense_lists.deleted_at', '=', null)
         ->select(
             \DB::raw($fields1),
-    )->get();
-   
+        )->get();
+
     $expected_expense_data_1 = $expected_expense_data_1->toArray()[0];
-    $expected_fin_year = $next_year.' - '.$next_year+1;
-    
+    $expected_fin_year = $next_year . ' - ' . $next_year + 1;
+
     $expected_expense_data_2 = DB::table('expected_expenses')->where('expected_expenses.expected_expense_year', $expected_fin_year)
         ->leftjoin('expected_expense_lists', 'expected_expense_lists.expected_expense_id', '=', 'expected_expenses.id')
         ->where('expected_expenses.deleted_at', '=', null)
         ->where('expected_expense_lists.deleted_at', '=', null)
         ->select(
             \DB::raw($fields2)
-    )->get();
+        )->get();
     $expected_expense_data_2 = $expected_expense_data_2->toArray()[0];
 
     $final_arr = [

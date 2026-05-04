@@ -3,7 +3,8 @@
 'expenses', 'expenses.add', 'expenses.edit', 'expenses.import-expenses', 'categories', 'expense.categories', 'departments', 'payment-methods', 'payment-statuses','leads', 'leads.add', 'leads.edit',
 'invoices', 'invoices.add', 'invoices.edit', 'invoices.view', 'brands', 'brands.add', 'brands.edit', 'invoice-resources', 'invoice-resources.add', 'invoice-resources.edit',
 'invoice-settings', 'estimate-settings', 'subscriptions', 'subscriptions.add', 'subscriptions.edit', 'quotes', 'quotes.add', 'quotes.edit', 'reports', 'opening-balance',
-'email-logs', 'expected-expenses', 'expected-expenses.edit', 'pending-expense','projects.create','projects']))
+'email-logs', 'expected-expenses', 'expected-expenses.edit', 'pending-expense','projects.create','projects','expense-keys',
+'expense-keys.edit','expense-keys.add']))
 <div class="header">
     <div class="header-left">
         <a href="{{url('dashboard')}}" class="logo">

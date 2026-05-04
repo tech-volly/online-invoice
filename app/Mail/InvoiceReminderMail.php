@@ -7,16 +7,18 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
 
-class SendInvoiceMail extends Mailable
+class InvoiceReminderMail extends Mailable
 {
     use Queueable, SerializesModels;
     public $details;
+
     /**
      * Create a new message instance.
      *
      * @return void
      */
-    public function __construct($details){
+    public function __construct($details)
+    {
         $this->details = $details;
     }
 
@@ -27,7 +29,8 @@ class SendInvoiceMail extends Mailable
      */
     public function build()
     {
-        return $this->subject('Invoice #'.$this->details['invoice_number'].' from ' . config('app.name'))->view('emails.send-invoice')->attach($this->details['file']);
-
+        return $this->subject('Invoice Reminder #' . $this->details['invoice_number'] . ' from ' . config('app.name'))
+            ->view('emails.invoice-reminder')
+            ->attach($this->details['file']);
     }
 }

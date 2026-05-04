@@ -81,10 +81,11 @@ class SubscriptionController extends Controller
             if($sub_start_date > $current_date) {
                 $subscription_next_date = $subscription_start_date;
             }else {
-                $subscription_next_date = getSubscriptionNextDate($post_array['subscription_cycle'], $sub_start_date);
+                $subscription_next_date = getSubscriptionNextDate($post_array['subscription_cycle'], $subscription_due_date);
             }
         }
 
+        //echo $subscription_next_date; exit;
         $subscription->subscription_name = $post_array['subscription_name'];
         $subscription->subscription_cycle = $post_array['subscription_cycle'];
         $subscription->subscription_start_date = $sub_start_date;

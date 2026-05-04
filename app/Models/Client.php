@@ -17,7 +17,7 @@ class Client extends Model
         'client_number', 'client_business_name', 'client_first_name', 'client_last_name', 'client_mobile', 'client_street_address_1', 'client_city', 
         'client_state', 'client_postalcode', 'client_country', 'add_shipping_address', 'shipping_street_address_1', 'shipping_city',
         'shipping_state', 'shipping_postalcode', 'shipping_country', 'client_invoicing_method', 'client_currency', 'client_email',
-        'client_notes'
+        'client_quotes_email', 'reminder_day', 'client_notes'
     ];
 
     public function contacts() {

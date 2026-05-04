@@ -51,7 +51,63 @@
                     </tr>
                 </thead>
                 <tbody>
-                   
+                    @foreach($data as $key => $v)
+                    <tr id="productrow_{{$v->id}}">
+                        <td>
+                            <div class="checkbox">
+                                <input type="checkbox" id="chk{{$v->id}}" class="custom-control-input cb-element" value="{{$v->id}}" aria-invalid="false"> 
+                                <label for="chk{{$v->id}}"></label>
+                            </div>
+                        </td>
+                        <td>
+                            <h2 class="table-avatar">
+                                @if($v->product_image)
+                                <a href="{{URL::asset('public/uploads/products/'.$v->id.'/'.$v->product_image)}}" class="avatar brand-custom image-link">
+                                    <img src="{{URL::asset('public/uploads/products/'.$v->id.'/'.$v->product_image)}}" alt="" style="height: 45px;width: 45px;">
+                                </a>
+                                @else
+                                <a href="{{URL::asset('public/assets/img/profiles/avatar-01.jpg')}}" class="avatar brand-custom image-link">
+                                    <img src="{{URL::asset('public/assets/img/profiles/avatar-01.jpg')}}" alt="" style="height: 45px;width: 45px;">
+                                </a>
+                                @endif
+                            </h2>
+                        </td>
+                        <td>{{ $v->product_name }}</td>
+                        <td>{{ categoryName($v->category_id) }}</td>
+                        <td>{{ getPrice($v->product_price) }}</td>
+                        <td>{{ getPrice($v->product_purchase_price) }}</td>
+                        <td>{{ getPrice($v->product_margin) }}</td>
+                        <td>{{ $v->product_tax }}</td>
+                        <td>
+                            @if($v->is_status == 1)
+                                <span class="btn btn-white btn-sm btn-rounded">
+                                    <i class="fa fa-dot-circle-o text-success"></i> Active 
+                                </span>
+                            @else
+                                <span class="btn btn-white btn-sm btn-rounded">
+                                    <i class="fa fa-dot-circle-o text-danger"></i> Inactive 
+                                </span>
+                            @endif
+                        </td>
+                        <td class="text-center">
+                            <div class="dropdown dropdown-action">
+                                <a href="#" class="action-icon dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false"><i class="material-icons">more_vert</i></a>
+                                <div class="dropdown-menu dropdown-menu-right">
+                                    @can('product-edit')
+                                    <a class="dropdown-item" href="{{route('products.edit', $v->id)}}">
+                                        <i class="fa fa-pencil m-r-5"></i> Edit
+                                    </a>
+                                    @endcan
+                                    @can('product-delete')
+                                    <a class="dropdown-item deleteProductBtn" href="javascript:void(0)" data-id="{{$v->id}}">
+                                        <i class="fa fa-trash-o m-r-5"></i> Delete
+                                    </a>
+                                    @endcan
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    @endforeach
                 </tbody>
             </table>
         </div>

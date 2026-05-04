@@ -1,12 +1,12 @@
-<?php $page="clients";?>
+<?php $page = "clients"; ?>
 @extends('layout.mainlayout')
 @section('content')
-    @component('components.breadcrumb')                
-        @slot('title') Clients @endslot
-        @slot('li_1') Dashboard @endslot
-        @slot('li_2') Clients @endslot
-    @endcomponent
-    @include('layout.flash-message')
+@component('components.breadcrumb')
+@slot('title') Clients @endslot
+@slot('li_1') Dashboard @endslot
+@slot('li_2') Clients @endslot
+@endcomponent
+@include('layout.flash-message')
 <div class="row">
     <div class="col-12 col-sm-12 col-md-6 col-lg-6 col-xl-6">
         <div class="form-group form-focus datatableButtons">
@@ -23,7 +23,7 @@
                 Import Temporary Clients
             </a>
             @can('client-delete')
-                <button type="button" class="btn btn-danger exportbtn-custom" id="btnAllDelete"><i class="fa fa-trash-o"></i> Delete</button>
+            <button type="button" class="btn btn-danger exportbtn-custom" id="btnAllDelete"><i class="fa fa-trash-o"></i> Delete</button>
             @endcan
         </div>
     </div>
@@ -41,8 +41,11 @@
                             </div>
                         </th>
                         <th>Name</th>
-                        <th>Accounts Email</th>
+                        <th>Invoice Email</th>
+                        <th>Quotes Email</th>
+                        <th>Statement Email</th>
                         <th>Mobile</th>
+                        <th>Reminder Days</th>
                         <th>Status</th>
                         <th class="text-center">Action</th>
                     </tr>
@@ -52,23 +55,26 @@
                     <tr id="clientrow_{{$v->id}}">
                         <td>
                             <div class="checkbox">
-                                <input type="checkbox" id="chk{{$v->id}}" class="custom-control-input cb-element" value="{{$v->id}}" aria-invalid="false"> 
+                                <input type="checkbox" id="chk{{$v->id}}" class="custom-control-input cb-element" value="{{$v->id}}" aria-invalid="false">
                                 <label for="chk{{$v->id}}"></label>
                             </div>
                         </td>
                         <td>{{ $v->client_business_name }}</td>
                         <td>{{ $v->client_email }}</td>
+                        <td>{{ $v->client_quotes_email }}</td>
+                        <td>{{ $v->client_statement_email }}</td>
                         <td>{{ $v->client_mobile }}</td>
+                        <td>{{ $v->reminder_day ?? 15 }}</td>
                         <td>
                             @if($v->is_status == 1)
-                                <span class="btn btn-white btn-sm btn-rounded">
-                                    <i class="fa fa-dot-circle-o text-success"></i> Active 
-                                </span>
-                                <!-- <span class="badge bg-inverse-success">Active</span> -->
+                            <span class="btn btn-white btn-sm btn-rounded">
+                                <i class="fa fa-dot-circle-o text-success"></i> Active
+                            </span>
+                            <!-- <span class="badge bg-inverse-success">Active</span> -->
                             @else
-                                <span class="btn btn-white btn-sm btn-rounded">
-                                    <i class="fa fa-dot-circle-o text-danger"></i> Inactive 
-                                </span>
+                            <span class="btn btn-white btn-sm btn-rounded">
+                                <i class="fa fa-dot-circle-o text-danger"></i> Inactive
+                            </span>
                             @endif
                         </td>
                         <td class="text-center">

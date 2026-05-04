@@ -7,7 +7,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
 
-class SendInvoiceMail extends Mailable
+class CancelInvoiceMail extends Mailable
 {
     use Queueable, SerializesModels;
     public $details;
@@ -27,7 +27,7 @@ class SendInvoiceMail extends Mailable
      */
     public function build()
     {
-        return $this->subject('Invoice #'.$this->details['invoice_number'].' from ' . config('app.name'))->view('emails.send-invoice')->attach($this->details['file']);
+        return $this->subject('Invoice Cancellation #'.$this->details['invoice_number'].' from ' . config('app.name'))->view('emails.cancel-invoice');
 
     }
 }

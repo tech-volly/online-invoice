@@ -1,6 +1,6 @@
 <?php $page = "reports"; ?>
 @extends('layout.mainlayout')
-@section('content')    
+@section('content')
 <div class="page-header">
     <div class="row align-items-center">
         <div class="col">
@@ -11,7 +11,7 @@
             </ul>
         </div>
     </div>
-</div>    
+</div>
 @include('layout.flash-message')
 <div class="row">
     <div class="col-md-12">
@@ -21,9 +21,9 @@
             </div>
             <div class="card-body">
                 <div class="row filter-row">
-                    <div class="col-sm-6 col-md-3"> 
+                    <div class="col-sm-6 col-md-3">
                         <div class="form-group form-focus select-focus">
-                            <select class="form-control select_year_value floating" id="year_value"> 
+                            <select class="form-control select_year_value floating" id="year_value">
                                 <option selected disabled>Select Year</option>
                                 <option value="2020">2020 - 2021</option>
                                 <option value="2021">2021 - 2022</option>
@@ -36,21 +36,40 @@
                                 <option value="2028">2028 - 2029</option>
                                 <option value="2029">2029 - 2030</option>
                                 <option value="2030">2030 - 2031</option>
+                                <option value="2031">2031 - 2032</option>
+                                <option value="2032">2032 - 2033</option>
+                                <option value="2033">2033 - 2034</option>
+                                <option value="2034">2034 - 2035</option>
+                                <option value="2035">2035 - 2036</option>
+                                <option value="2036">2036 - 2037</option>
+                                <option value="2037">2037 - 2038</option>
+                                <option value="2038">2038 - 2039</option>
+                                <option value="2039">2039 - 2040</option>
+                                <option value="2040">2040 - 2041</option>
+                                <option value="2041">2041 - 2042</option>
+                                <option value="2042">2042 - 2043</option>
+                                <option value="2043">2043 - 2044</option>
+                                <option value="2044">2044 - 2045</option>
+                                <option value="2045">2045 - 2046</option>
+                                <option value="2046">2046 - 2047</option>
+                                <option value="2047">2047 - 2048</option>
+                                <option value="2048">2048 - 2049</option>
+                                <option value="2049">2049 - 2050</option>
                             </select>
                             <label class="focus-label">Year</label>
                         </div>
                     </div>
                     <div class="col-sm-6 col-md-3"></div>
                     <div class="col-sm-6 col-md-3">
-                        <a href="{{route('reports.quarter-comparison')}}" class="btn btn-primary report-btn" id="download_quater_comparison"> 
-                            <i class="fa fa-download"></i> Download 
-                        </a>  
-                    </div>     
+                        <a href="{{route('reports.quarter-comparison')}}" class="btn btn-primary report-btn" id="download_quater_comparison">
+                            <i class="fa fa-download"></i> Download
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-</div>  
+</div>
 <div class="row">
     <div class="col-md-12">
         <div class="card">
@@ -59,9 +78,9 @@
             </div>
             <div class="card-body">
                 <div class="row filter-row">
-                    <div class="col-sm-6 col-md-3"> 
+                    <div class="col-sm-6 col-md-3">
                         <div class="form-group form-focus select-focus">
-                            <select class="form-control select_year_value floating" id="select_quarter"> 
+                            <select class="form-control select_year_value floating" id="select_quarter">
                                 <option selected disabled>Select Quarter</option>
                                 <option value="quarter1">Quarter 1</option>
                                 <option value="quarter2">Quarter 2</option>
@@ -71,9 +90,9 @@
                             <label class="focus-label">Quarter</label>
                         </div>
                     </div>
-                    <div class="col-sm-6 col-md-3"> 
+                    <div class="col-sm-6 col-md-3">
                         <div class="form-group form-focus select-focus">
-                            <select class="form-control select_year_value floating" id="select_quarter_year"> 
+                            <select class="form-control select_year_value floating" id="select_quarter_year">
                                 <option selected disabled>Select Year</option>
                                 <option value="2020">2020 - 2021</option>
                                 <option value="2021">2021 - 2022</option>
@@ -86,15 +105,34 @@
                                 <option value="2028">2028 - 2029</option>
                                 <option value="2029">2029 - 2030</option>
                                 <option value="2030">2030 - 2031</option>
+                                <option value="2031">2031 - 2032</option>
+                                <option value="2032">2032 - 2033</option>
+                                <option value="2033">2033 - 2034</option>
+                                <option value="2034">2034 - 2035</option>
+                                <option value="2035">2035 - 2036</option>
+                                <option value="2036">2036 - 2037</option>
+                                <option value="2037">2037 - 2038</option>
+                                <option value="2038">2038 - 2039</option>
+                                <option value="2039">2039 - 2040</option>
+                                <option value="2040">2040 - 2041</option>
+                                <option value="2041">2041 - 2042</option>
+                                <option value="2042">2042 - 2043</option>
+                                <option value="2043">2043 - 2044</option>
+                                <option value="2044">2044 - 2045</option>
+                                <option value="2045">2045 - 2046</option>
+                                <option value="2046">2046 - 2047</option>
+                                <option value="2047">2047 - 2048</option>
+                                <option value="2048">2048 - 2049</option>
+                                <option value="2049">2049 - 2050</option>
                             </select>
                             <label class="focus-label">Year</label>
                         </div>
                     </div>
                     <div class="col-sm-6 col-md-3">
-                        <a href="{{route('reports.quarter-report')}}" class="btn btn-primary report-btn" id="download_quater_report"> 
-                            <i class="fa fa-download"></i> Download  
-                        </a>  
-                    </div>     
+                        <a href="{{route('reports.quarter-report')}}" class="btn btn-primary report-btn" id="download_quater_report">
+                            <i class="fa fa-download"></i> Download
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
@@ -108,7 +146,7 @@
             </div>
             <div class="card-body">
                 <div class="row filter-row">
-                    <div class="col-sm-6 col-md-3"> 
+                    <div class="col-sm-6 col-md-3">
                         <div class="form-group form-focus">
                             <div class="cal-icon">
                                 <input class="form-control floating datetimepicker" type="text" id="from_date">
@@ -116,7 +154,7 @@
                             <label class="focus-label">From</label>
                         </div>
                     </div>
-                    <div class="col-sm-6 col-md-3"> 
+                    <div class="col-sm-6 col-md-3">
                         <div class="form-group form-focus">
                             <div class="cal-icon">
                                 <input class="form-control floating datetimepicker" type="text" id="to_date">
@@ -125,10 +163,10 @@
                         </div>
                     </div>
                     <div class="col-sm-6 col-md-3">
-                        <a href="{{route('reports.pnl-report')}}" class="btn btn-primary report-btn" id="download_pnl_report"> 
-                            <i class="fa fa-download"></i> Download  
-                        </a>  
-                    </div>     
+                        <a href="{{route('reports.pnl-report')}}" class="btn btn-primary report-btn" id="download_pnl_report">
+                            <i class="fa fa-download"></i> Download
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
@@ -142,7 +180,7 @@
             </div>
             <div class="card-body">
                 <div class="row filter-row">
-                    <div class="col-sm-6 col-md-3"> 
+                    <div class="col-sm-6 col-md-3">
                         <div class="form-group form-focus">
                             <div class="cal-icon">
                                 <input class="form-control floating forecastDateTimePicker" type="text" id="forecast_to_date">
@@ -152,10 +190,10 @@
                     </div>
                     <div class="col-sm-6 col-md-3"></div>
                     <div class="col-sm-6 col-md-3">
-                        <a href="{{route('reports.forecast-report')}}" class="btn btn-primary report-btn" id="download_forecast_report"> 
-                            <i class="fa fa-download"></i> Download  
-                        </a>  
-                    </div>     
+                        <a href="{{route('reports.forecast-report')}}" class="btn btn-primary report-btn" id="download_forecast_report">
+                            <i class="fa fa-download"></i> Download
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
@@ -169,7 +207,7 @@
             </div>
             <div class="card-body">
                 <div class="row filter-row">
-                    <div class="col-sm-6 col-md-3"> 
+                    <div class="col-sm-6 col-md-3">
                         <div class="form-group form-focus">
                             <div class="cal-icon">
                                 <input class="form-control floating cashflowDateTimePicker" type="text" id="from_year_month">
@@ -177,7 +215,7 @@
                             <label class="focus-label">From</label>
                         </div>
                     </div>
-                    <div class="col-sm-6 col-md-3"> 
+                    <div class="col-sm-6 col-md-3">
                         <div class="form-group form-focus">
                             <div class="cal-icon">
                                 <input class="form-control floating cashflowDateTimePicker" type="text" id="to_year_month">
@@ -186,10 +224,10 @@
                         </div>
                     </div>
                     <div class="col-sm-6 col-md-3">
-                        <a href="{{route('reports.cashflow-report')}}" class="btn btn-primary report-btn" id="download_cashflow_report"> 
-                            <i class="fa fa-download"></i> Download  
-                        </a>  
-                    </div>     
+                        <a href="{{route('reports.cashflow-report')}}" class="btn btn-primary report-btn" id="download_cashflow_report">
+                            <i class="fa fa-download"></i> Download
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
@@ -203,9 +241,9 @@
             </div>
             <div class="card-body">
                 <div class="row filter-row">
-                    <div class="col-sm-6 col-md-3"> 
+                    <div class="col-sm-6 col-md-3">
                         <div class="form-group form-focus select-focus">
-                            <select class="form-control select_year_value floating" id="expected_expense_year"> 
+                            <select class="form-control select_year_value floating" id="expected_expense_year">
                                 <option selected disabled>Select Year</option>
                                 <option value="2021 - 2022">2021 - 2022</option>
                                 <option value="2022 - 2023">2022 - 2023</option>
@@ -217,21 +255,40 @@
                                 <option value="2028 - 2029">2028 - 2029</option>
                                 <option value="2029 - 2030">2029 - 2030</option>
                                 <option value="2030 - 2031">2030 - 2031</option>
+                                <option value="2031 - 2032">2031 - 2032</option>
+                                <option value="2032 - 2033">2032 - 2033</option>
+                                <option value="2033 - 2034">2033 - 2034</option>
+                                <option value="2034 - 2035">2034 - 2035</option>
+                                <option value="2035 - 2036">2035 - 2036</option>
+                                <option value="2036 - 2037">2036 - 2037</option>
+                                <option value="2037 - 2038">2037 - 2038</option>
+                                <option value="2038 - 2039">2038 - 2039</option>
+                                <option value="2039 - 2040">2039 - 2040</option>
+                                <option value="2040 - 2041">2040 - 2041</option>
+                                <option value="2041 - 2042">2041 - 2042</option>
+                                <option value="2042 - 2043">2042 - 2043</option>
+                                <option value="2043 - 2044">2043 - 2044</option>
+                                <option value="2044 - 2045">2044 - 2045</option>
+                                <option value="2045 - 2046">2045 - 2046</option>
+                                <option value="2046 - 2047">2046 - 2047</option>
+                                <option value="2047 - 2048">2047 - 2048</option>
+                                <option value="2048 - 2049">2048 - 2049</option>
+                                <option value="2049 - 2050">2049 - 2050</option>
                             </select>
                             <label class="focus-label">Year</label>
                         </div>
                     </div>
                     <div class="col-sm-6 col-md-3"></div>
                     <div class="col-sm-6 col-md-3">
-                        <a href="{{route('reports.expected-expense-report')}}" class="btn btn-primary report-btn" id="download_expected_expense"> 
-                            <i class="fa fa-download"></i> Download 
-                        </a>  
-                    </div>     
+                        <a href="{{route('reports.expected-expense-report')}}" class="btn btn-primary report-btn" id="download_expected_expense">
+                            <i class="fa fa-download"></i> Download
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-</div>  
+</div>
 <div class="row">
     <div class="col-md-12">
         <div class="card">
@@ -240,27 +297,27 @@
             </div>
             <div class="card-body">
                 <div class="row filter-row">
-                 
-                    <div class="col-sm-6 col-md-3"> 
+
+                    <div class="col-sm-6 col-md-3">
                         <div class="form-group form-focus select-focus">
                             <!-- <div class="cal-icon select-focus" > -->
-                                <select class="form-control select_year_value floating" name="project_id" id="project_id">
-                                        <option selected disabled>Select Project</option>
-                                        @foreach($projects as $project)
-                                        <option value="{{$project->id}}">
-                                            {{$project->name}}
-                                        </option>
-                                        @endforeach
-                                    </select>
-                                <!-- </div> -->
+                            <select class="form-control select_year_value floating" name="project_id" id="project_id">
+                                <option selected disabled>Select Project</option>
+                                @foreach($projects as $project)
+                                <option value="{{$project->id}}">
+                                    {{$project->name}}
+                                </option>
+                                @endforeach
+                            </select>
+                            <!-- </div> -->
                             <label class="focus-label">Project</label>
                         </div>
                     </div>
                     <div class="col-sm-6 col-md-3">
-                        <a href="{{route('reports.project-report')}}" class="btn btn-primary report-btn" id="download_project_report"> 
-                            <i class="fa fa-download"></i> Download  
-                        </a>  
-                    </div>     
+                        <a href="{{route('reports.project-report')}}" class="btn btn-primary report-btn" id="download_project_report">
+                            <i class="fa fa-download"></i> Download
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
@@ -274,10 +331,10 @@
             </div>
             <div class="card-body">
                 <div class="row filter-row">
-                    <div class="col-sm-6 col-md-3"> 
-                    <label class="focus-label"></label>
+                    <div class="col-sm-6 col-md-3">
+                        <label class="focus-label"></label>
                         <div class="form-group form-focus select-focus">
-                             <select class="form-control select_year_value floating" id="expense_year"> 
+                            <select class="form-control select_year_value floating" id="expense_year">
                                 <option selected disabled>Select Year</option>
                                 <option value="2021 - 2022">2021 - 2022</option>
                                 <option value="2022 - 2023">2022 - 2023</option>
@@ -289,29 +346,98 @@
                                 <option value="2028 - 2029">2028 - 2029</option>
                                 <option value="2029 - 2030">2029 - 2030</option>
                                 <option value="2030 - 2031">2030 - 2031</option>
+                                <option value="2031 - 2032">2031 - 2032</option>
+                                <option value="2032 - 2033">2032 - 2033</option>
+                                <option value="2033 - 2034">2033 - 2034</option>
+                                <option value="2034 - 2035">2034 - 2035</option>
+                                <option value="2035 - 2036">2035 - 2036</option>
+                                <option value="2036 - 2037">2036 - 2037</option>
+                                <option value="2037 - 2038">2037 - 2038</option>
+                                <option value="2038 - 2039">2038 - 2039</option>
+                                <option value="2039 - 2040">2039 - 2040</option>
+                                <option value="2040 - 2041">2040 - 2041</option>
+                                <option value="2041 - 2042">2041 - 2042</option>
+                                <option value="2042 - 2043">2042 - 2043</option>
+                                <option value="2043 - 2044">2043 - 2044</option>
+                                <option value="2044 - 2045">2044 - 2045</option>
+                                <option value="2045 - 2046">2045 - 2046</option>
+                                <option value="2046 - 2047">2046 - 2047</option>
+                                <option value="2047 - 2048">2047 - 2048</option>
+                                <option value="2048 - 2049">2048 - 2049</option>
+                                <option value="2049 - 2050">2049 - 2050</option>
                             </select>
                             <label class="focus-label">Year</label>
                         </div>
                     </div>
-                    <div class="col-sm-6 col-md-3"> 
-                    <label class="focus-label">Expense Category</label>
+                    <div class="col-sm-6 col-md-3">
+                        <label class="focus-label">Expense Category</label>
                         <div class="form-group form-focus select-focus expense-category">
-                            <select class="form-control select_year_value floating expense-category" id="category_id" name="category_id[]" multiple> 
+                            <select class="form-control select_year_value floating expense-category" id="category_id" name="category_id[]" multiple>
                                 <!-- <option selected disabled>Select Expense Category</option> -->
                                 @foreach($expense_categories as $category)
-                                        <option value="{{$category->id}}">
-                                            {{$category->name}}
-                                        </option>
+                                <option value="{{$category->id}}">
+                                    {{$category->name}}
+                                </option>
                                 @endforeach
                             </select>
                             <!-- <label class="focus-label">Expense Category</label> -->
                         </div>
                     </div>
                     <div class="col-sm-6 col-md-3">
-                        <a href="{{route('reports.expense-report')}}" class="btn btn-primary report-btn" id="download_expense_report"> 
-                            <i class="fa fa-download"></i> Download  
-                        </a>  
-                    </div>     
+                        <a href="{{route('reports.expense-report')}}" class="btn btn-primary report-btn" id="download_expense_report">
+                            <i class="fa fa-download"></i> Download
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title mb-0">Client Statement</h4>
+            </div>
+            <div class="card-body">
+                <div class="row filter-row">
+                    <div class="col-sm-6 col-md-3">
+                        <div class="form-group form-focus">
+                            <div class="cal-icon">
+                                <input class="form-control floating clientDateTimePicker" type="text" id="client_from_year_month">
+                            </div>
+                            <label class="focus-label">From</label>
+                        </div>
+                    </div>
+                    <div class="col-sm-6 col-md-3">
+                        <div class="form-group form-focus">
+                            <div class="cal-icon">
+                                <input class="form-control floating clientDateTimePicker" type="text" id="client_to_year_month">
+                            </div>
+                            <label class="focus-label">To</label>
+                        </div>
+                    </div>
+                     <div class="col-sm-6 col-md-3">
+                        <div class="form-group form-focus select-focus">
+                            <!-- <div class="cal-icon select-focus" > -->
+                            <select class="form-control select_year_value floating" name="client_id" id="client_id">
+                                <option selected disabled>Select Client</option>
+                                @foreach($clients as $client)
+                                <option value="{{$client->id}}">
+                                    {{$client->client_business_name}}
+                                </option>
+                                @endforeach
+                            </select>
+                            <!-- </div> -->
+                            <label class="focus-label">Client</label>
+                        </div>
+                    </div>
+                    <div class="col-sm-6 col-md-3">
+                        <a href="{{route('reports.client-statement')}}" class="btn btn-primary report-btn" id="download_client_statement">
+                            <i class="fa fa-download"></i> Download
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>

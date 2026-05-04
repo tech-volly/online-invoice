@@ -45,46 +45,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach($data as $key => $v)
-                    <tr id="expectedexpenserow_{{$v->id}}">
-                        <td>
-                            <div class="checkbox">
-                                <input type="checkbox" id="chk{{$v->id}}" class="custom-control-input cb-element" value="{{$v->id}}" aria-invalid="false"> 
-                                <label for="chk{{$v->id}}"></label>
-                            </div>
-                        </td>
-                        <td>{{ $v->expected_expense_year }}</td>
-                        <td>
-                            @if($v->is_status == 1)
-                                <span class="btn btn-white btn-sm btn-rounded">
-                                    <i class="fa fa-dot-circle-o text-success"></i> Active 
-                                </span>
-                            @else
-                                <span class="btn btn-white btn-sm btn-rounded">
-                                    <i class="fa fa-dot-circle-o text-danger"></i> Inactive 
-                                </span>
-                            @endif
-                        </td>
-                        <td class="text-center">
-                            <div class="dropdown dropdown-action">
-                                <a href="#" class="action-icon dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false"><i class="material-icons">more_vert</i></a>
-                                <div class="dropdown-menu dropdown-menu-right">
-                                    <a class="dropdown-item" href="{{route('expected-expenses.clone', $v->id)}}" data-id="{{$v->id}}">
-                                        <i class="fa fa-clone m-r-5"></i> Clone
-                                    </a>
-                                    @can('expected-expense-edit')
-                                    <a class="dropdown-item" href="{{route('expected-expenses.edit', $v->id)}}"><i class="fa fa-pencil m-r-5"></i> Edit</a>
-                                    @endcan
-                                    @can('expected-expense-delete')
-                                    <a class="dropdown-item deleteExpectedExpenseBtn" href="javascript:void(0)" data-id="{{$v->id}}">
-                                        <i class="fa fa-trash-o m-r-5"></i> Delete
-                                    </a>
-                                    @endcan
-                                </div>
-                            </div>
-                        </td>
-                    </tr>
-                    @endforeach
+                   
                 </tbody>
             </table>
         </div>

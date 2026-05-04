@@ -255,9 +255,12 @@
                             @endforeach
                             @else
                             <tr class="table-danger text-center">
-                                <td colspan="6">
-                                    No Data Available
-                                </td>
+                                <td>No Data Available</td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
                             </tr>
                             @endif
                         </tbody>
@@ -432,6 +435,38 @@
 
 <br /><br />
 
+<!-- Sales vs Expenses Trend Chart Section -->
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header" style="background-color: #667eea;">
+                <h3 class="card-title mb-0">Sales vs Expenses Trend Analysis</h3>
+            </div>
+            <div class="card-body">
+                <canvas id="salesVsExpensesTrendChart" style="height: 350px;"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<br /><br />
+
+<!-- Quarterly Comparison Chart Section -->
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header" style="background-color: #667eea;">
+                <h3 class="card-title mb-0">Quarterly Comparison - Current Year vs Previous 2 Years</h3>
+            </div>
+            <div class="card-body">
+                <canvas id="quarterlyComparisonChart" style="height: 350px;"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<br /><br />
+
 <div class="row">
     <div class="col-md-12">
         <div class="row">
@@ -469,6 +504,125 @@
                                  @endforeach
                             </ul>
                         </nav>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Client Revenue Section -->
+<div class="row">
+    <div class="col-md-12">
+        <div class="row">
+            <div class="col-md-12 text-center total-income">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="card-header" style="background-color: #667eea;">
+                            <h3 class="card-title mb-0">Top Clients by Revenue (FY {{ $data['current_year'] }}-{{ $data['current_year'] + 1 }})</h3>
+                            <div class="card-header-actions">
+                                <!-- <button class="btn btn-sm btn-success" onclick="exportClientRevenue('xlsx')">
+                                    <i class="fa fa-download"></i> Excel
+                                </button> -->
+                                <button class="btn btn-sm btn-danger" onclick="exportClientRevenue('pdf')">
+                                    <i class="fa fa-file-pdf-o"></i> PDF
+                                </button>
+                            </div>
+                        </div>
+                        <div class="chart-container" style="position: relative; height: 400px; margin-bottom: 20px;">
+                            <canvas id="clientRevenueChart"></canvas>
+                        </div>
+
+                        <!-- Revenue Summary Cards -->
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <div class="card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                                    <div class="card-body text-center">
+                                        <h5>Current Year Revenue</h5>
+                                        <h3>${{ number_format($data['total_current_revenue'], 2) }}</h3>
+                                        <small>FY {{ $data['current_year'] }}-{{ $data['current_year'] + 1 }}</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card" style="background: linear-gradient(135deg, #4b9c7e 0%, #2f6b52 100%); color: white;">
+                                    <div class="card-body text-center">
+                                        <h5>Previous Year Revenue</h5>
+                                        <h3>${{ number_format($data['total_previous_revenue'], 2) }}</h3>
+                                        <small>FY {{ $data['previous_year'] }}-{{ $data['current_year'] }}</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white;">
+                                    <div class="card-body text-center">
+                                        <h5>Year-over-Year Change</h5>
+                                        <h3>${{ number_format($data['total_revenue_difference'], 2) }}</h3>
+                                        @if($data['total_revenue_difference'] > 0)
+                                            <span class="badge badge-success">
+                                                <i class="fa fa-arrow-up"></i>
+                                                {{ number_format(($data['total_revenue_difference'] / $data['total_previous_revenue'] * 100), 2) }}%
+                                            </span>
+                                        @else
+                                            <span class="badge badge-danger">
+                                                <i class="fa fa-arrow-down"></i>
+                                                {{ number_format(abs($data['total_revenue_difference'] / $data['total_previous_revenue'] * 100), 2) }}%
+                                            </span>
+                                        @endif
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Client Revenue Table -->
+                        <!-- <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead style="background-color: #f8f9fa;">
+                                    <tr>
+                                        <th>Client #</th>
+                                        <th>Client Name</th>
+                                        <th class="text-right">Current Year</th>
+                                        <th class="text-right">Previous Year</th>
+                                        <th class="text-right">Difference</th>
+                                        <th class="text-right">Change %</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @forelse($data['client_revenue_data'] as $client)
+                                        <tr>
+                                            <td>{{ $client['client_number'] }}</td>
+                                            <td>{{ $client['client_name'] }}</td>
+                                            <td class="text-right font-weight-bold">${{ number_format($client['current_revenue'], 2) }}</td>
+                                            <td class="text-right">${{ number_format($client['previous_revenue'], 2) }}</td>
+                                            <td class="text-right">
+                                                @if($client['difference'] > 0)
+                                                    <span class="badge badge-success"><i class="fa fa-arrow-up"></i> ${{ number_format($client['difference'], 2) }}</span>
+                                                @elseif($client['difference'] < 0)
+                                                    <span class="badge badge-danger"><i class="fa fa-arrow-down"></i> ${{ number_format(abs($client['difference']), 2) }}</span>
+                                                @else
+                                                    <span class="badge badge-secondary">No Change</span>
+                                                @endif
+                                            </td>
+                                            <td class="text-right">
+                                                @if($client['percentage_change'] > 0)
+                                                    <span class="badge badge-success">+{{ $client['percentage_change'] }}%</span>
+                                                @elseif($client['percentage_change'] < 0)
+                                                    <span class="badge badge-danger">{{ $client['percentage_change'] }}%</span>
+                                                @else
+                                                    <span class="badge badge-secondary">0%</span>
+                                                @endif
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="6" class="text-center text-muted py-4">
+                                                No client revenue data available
+                                            </td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div> -->
                     </div>
                 </div>
             </div>
@@ -540,9 +694,15 @@
                             @endforeach
                             @else
                             <tr class="table-danger text-center">
-                                <td colspan="9">
-                                    No Data Available
-                                </td>
+                                <td>No Data Available</td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
                             </tr>
                             @endif
                         </tbody>
@@ -694,9 +854,11 @@
                             @endforeach
                             @else
                             <tr class="table-danger text-center">
-                                <td colspan="5">
-                                    No Data Available
-                                </td>
+                                <td>No Data Available</td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
                             </tr>
                             @endif
                         </tbody>
@@ -728,12 +890,263 @@
 <!-- /Main Wrapper -->              
 @endsection
 @section('script')
+<!-- Chart.js Library -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
 <!-- Morris JS -->
 <script src="{{ URL::asset('public/assets/libs/morris/morris.min.js')}}"></script>
 <script src="{{ URL::asset('public/assets/libs/raphael/raphael.min.js')}}"></script>
 <script src="{{ URL::asset('public/assets/js/pages/dashboard.js')}}"></script>
 <script type="text/javascript">
+// Export Client Revenue Report - Global function
+function exportClientRevenue(format) {
+    var currentYear = '{{ $data["current_year"] }}';
+    var previousYear = '{{ $data["previous_year"] }}';
+
+    var url = '{{ route("dashboard.client-revenue.export") }}?year=' + currentYear + '&compare_year=' + previousYear + '&format=' + format;
+    window.location = url;
+}
+
 $(document).ready(function () {
+    // Quarterly Comparison Chart
+    var quarterlyData = {!! $quarterly_comparison_json !!};
+    var fyLabel = "{{ $fy_label }}";
+    var fyLabel1 = "{{ $fy_label_1 }}";
+    var fyLabel2 = "{{ $fy_label_2 }}";
+    
+    var quarters = quarterlyData.map(item => item.quarter);
+    var currentYearData = quarterlyData.map(item => item.current);
+    var previousYear1Data = quarterlyData.map(item => item.previous_1);
+    var previousYear2Data = quarterlyData.map(item => item.previous_2);
+    
+    var ctx = document.getElementById('quarterlyComparisonChart');
+    if (ctx) {
+        new Chart(ctx.getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: quarters,
+                // datasets: [
+                //      {
+                //         label: fyLabel2,
+                //         data: previousYear2Data,
+                //         backgroundColor: '#f59e0b',
+                //         borderColor: '#f59e0b',
+                //         borderWidth: 1
+                //     },
+                //     {
+                //         label: fyLabel1,
+                //         data: previousYear1Data,
+                //         backgroundColor: '#764ba2',
+                //         borderColor: '#764ba2',
+                //         borderWidth: 1
+                //     },
+                //     {
+                //         label: fyLabel,
+                //         data: currentYearData,
+                //         backgroundColor: '#667eea',
+                //         borderColor: '#667eea',
+                //         borderWidth: 1
+                //     }
+                   
+                // ]
+                datasets: [
+                    {
+                        label: fyLabel2,
+                        data: previousYear2Data,
+                        backgroundColor: previousYear2Data.map(v => v >= 0 ? '#f59e0b' : '#ef4444'),
+                        borderColor:     previousYear2Data.map(v => v >= 0 ? '#f59e0b' : '#ef4444'),
+                        borderWidth: 1
+                    },
+                    {
+                        label: fyLabel1,
+                        data: previousYear1Data,
+                        backgroundColor: previousYear1Data.map(v => v >= 0 ? '#764ba2' : '#ef4444'),
+                        borderColor:     previousYear1Data.map(v => v >= 0 ? '#764ba2' : '#ef4444'),
+                        borderWidth: 1
+                    },
+                    {
+                        label: fyLabel,
+                        data: currentYearData,
+                        backgroundColor: currentYearData.map(v => v >= 0 ? '#667eea' : '#ef4444'),
+                        borderColor:     currentYearData.map(v => v >= 0 ? '#667eea' : '#ef4444'),
+                        borderWidth: 1
+                    }
+                ]
+            },
+            // options: {
+            //     responsive: true,
+            //     maintainAspectRatio: true,
+            //     plugins: {
+            //         legend: {
+            //             display: true,
+            //             position: 'top',
+            //             labels: {
+            //                 padding: 15,
+            //                 font: {
+            //                     size: 12,
+            //                     weight: '500'
+            //                 }
+            //             }
+            //         },
+            //         tooltip: {
+            //             callbacks: {
+            //                 label: function(context) {
+            //                     var label = context.dataset.label || '';
+            //                     if (label) {
+            //                         label += ': ';
+            //                     }
+            //                     label += '$' + context.parsed.y.toLocaleString();
+            //                     return label;
+            //                 }
+            //             }
+            //         }
+            //     },
+            //     scales: {
+            //         y: {
+            //             beginAtZero: true,
+            //             ticks: {
+            //                 callback: function(value) {
+            //                     return '$' + value.toLocaleString();
+            //                 }
+            //             }
+            //         }
+            //     }
+            // }
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top',
+                        labels: { padding: 15, font: { size: 12, weight: '500' } }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                var val = context.parsed.y;
+                                var sign = val >= 0 ? '+' : '';
+                                return context.dataset.label + ' Profit: ' + sign + '$' + val.toLocaleString('en-US', {minimumFractionDigits: 2});
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: false,   // allow negative values to show below 0
+                        ticks: {
+                            callback: function(value) {
+                                return (value >= 0 ? '+' : '') + '$' + value.toLocaleString();
+                            }
+                        },
+                        grid: {
+                            color: function(context) {
+                                // highlight the zero line
+                                return context.tick.value === 0 ? 'rgba(0,0,0,0.3)' : 'rgba(0,0,0,0.05)';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // Sales vs Expenses Trend Chart
+    var trendData = {!! $sales_vs_expenses_trend !!};
+    var trendCtx = document.getElementById('salesVsExpensesTrendChart');
+    if (trendCtx && trendData && trendData.length > 0) {
+        var trendMonths = trendData.map(item => item.month);
+        var trendSales = trendData.map(item => parseFloat(item.sales) || 0);
+        var trendExpenses = trendData.map(item => parseFloat(item.expenses) || 0);
+        var trendProfit = trendData.map(item => parseFloat(item.profit) || 0);
+        
+        new Chart(trendCtx.getContext('2d'), {
+            type: 'line',
+            data: {
+                labels: trendMonths,
+                datasets: [
+                    {
+                        label: 'Total Sales',
+                        data: trendSales,
+                         borderColor: '#28a745', // Green
+                        backgroundColor: 'rgba(40, 167, 69, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 4,
+                        pointBackgroundColor: '#667eea',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2
+                    },
+                    {
+                        label: 'Total Expenses',
+                        data: trendExpenses,
+                        borderColor: '#dc3545', // Red
+                        backgroundColor: 'rgba(220, 53, 69, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 4,
+                        pointBackgroundColor: '#764ba2',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2
+                    },
+                    // {
+                    //     label: 'Profit Margin',
+                    //     data: trendProfit,
+                    //     borderColor: '#10b981',
+                    //     backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                    //     borderWidth: 2,
+                    //     fill: true,
+                    //     tension: 0.4,
+                    //     pointRadius: 4,
+                    //     pointBackgroundColor: '#10b981',
+                    //     pointBorderColor: '#fff',
+                    //     pointBorderWidth: 2
+                    // }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top',
+                        labels: {
+                            padding: 15,
+                            font: {
+                                size: 12,
+                                weight: '500'
+                            }
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                var label = context.dataset.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                label += '$' + context.parsed.y.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                                return label;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return '$' + value.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 0});
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
     var income_expense = {!! $income_expense_arr !!};
     Morris.Bar({
         element: 'bar-charts',
@@ -804,6 +1217,86 @@ $(document).ready(function () {
              $(this).addClass("selected")
         }
     )
+
+    // Client Revenue Chart
+    @if(isset($clientRevenueChartData))
+    var clientRevenueCtx = document.getElementById('clientRevenueChart');
+    if (clientRevenueCtx) {
+        var clientRevenueData = {!! json_encode($clientRevenueChartData) !!};
+
+        new Chart(clientRevenueCtx.getContext('2d'), {
+            type: 'bar',
+            data: clientRevenueData,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: {
+                            padding: 15,
+                            font: {
+                                size: 12,
+                                weight: '500'
+                            }
+                        }
+                    },
+                    title: {
+                        display: true,
+                        text: 'Top 10 Clients by Revenue Comparison',
+                        font: {
+                            size: 14,
+                            weight: 'bold'
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        bodyFont: {
+                            size: 12
+                        },
+                        callbacks: {
+                            label: function(context) {
+                                return context.datasetIndex + 1 + ' FY: $' + context.parsed.y.toFixed(2);
+                            },
+                            afterLabel: function(context) {
+                                if (clientRevenueData.datasets.length > 1 && context.datasetIndex === 0 && clientRevenueData.datasets[1]) {
+                                    var dataset2Value = clientRevenueData.datasets[1].data[context.dataIndex];
+                                    var difference = context.parsed.y - dataset2Value;
+                                    var percentChange = dataset2Value > 0 ? ((difference / dataset2Value) * 100) : 0;
+
+                                    return 'Change: $' + difference.toFixed(2) + ' (' + percentChange.toFixed(2) + '%)';
+                                }
+                                return '';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                if (value >= 1000000) {
+                                    return '$' + (value / 1000000).toFixed(1) + 'M';
+                                } else if (value >= 1000) {
+                                    return '$' + (value / 1000).toFixed(1) + 'K';
+                                }
+                                return '$' + value.toFixed(0);
+                            }
+                        }
+                    },
+                    x: {
+                        ticks: {
+                            maxRotation: 45,
+                            minRotation: 0
+                        }
+                    }
+                }
+            }
+        });
+    }
+    @endif
+
 });
 </script>
 @endsection

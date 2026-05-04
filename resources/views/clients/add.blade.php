@@ -294,15 +294,42 @@
                 </div>
                 <div class="card-body">
                     <div class="row">
-                        <div class="col-xl-6">
+                        <div class="col-xl-4">
                             <div class="form-group row">
-                                <label class="col-lg-3 col-form-label">Accounts Email</label>
+                                <label class="col-lg-3 col-form-label">Invoice Email</label>
                                 <div class="col-lg-9">
                                     <input type="text" name="client_email" id="client_email" class="form-control" value="{{$data->client_email}}">
                                 </div>
                             </div>                    
                         </div>
-                        <div class="col-xl-6">
+
+                        <div class="col-xl-4">
+                            <div class="form-group row">
+                                <label class="col-lg-3 col-form-label">Quotes Email</label>
+                                <div class="col-lg-9">
+                                    <input type="text" name="client_quotes_email" id="client_quotes_email" class="form-control" value="{{$data->client_quotes_email}}">
+                                </div>
+                            </div>                    
+                        </div>
+
+                         <div class="col-xl-4">
+                            <div class="form-group row">
+                                <label class="col-lg-3 col-form-label">Statement Email</label>
+                                <div class="col-lg-9">
+                                    <input type="text" name="client_statement_email" id="client_statement_email" class="form-control" value="{{$data->client_statement_email}}">
+                                </div>
+                            </div>                    
+                        </div>
+                        <div class="col-xl-4">
+                            <div class="form-group row">
+                                <label class="col-lg-3 col-form-label">Reminder Days</label>
+                                <div class="col-lg-9">
+                                    <input type="number" min="1" name="reminder_day" id="reminder_day" class="form-control" value="{{ $data->reminder_day ?? 15 }}">
+                                    <small class="form-text text-muted">Default is 15 days after invoice email.</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xl-4">
                             <div class="form-group row">
                                 <label class="col-lg-3 col-form-label">Status</label>
                                 <div class="col-lg-9">

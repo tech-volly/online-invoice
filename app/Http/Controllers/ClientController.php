@@ -84,6 +84,9 @@ class ClientController extends Controller
         $client->client_notes = $post_array['client_notes'];
         $client->client_tags = $post_array['client_tags'];
         $client->client_email = $post_array['client_email'];
+        $client->client_quotes_email = $post_array['client_quotes_email'];
+        $client->client_statement_email = $post_array['client_statement_email'];
+        $client->reminder_day = isset($post_array['reminder_day']) && $post_array['reminder_day'] ? $post_array['reminder_day'] : 15;
         $client->is_status = $post_array['is_status'];
         $response = $client->save();
 

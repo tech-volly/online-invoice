@@ -28,6 +28,6 @@ class SendQuoteMail extends Mailable
      */
     public function build()
     {
-        return $this->subject('Quote #'.$this->details['quote_number'].' from S & P Family Trust Trading as HDS')->view('emails.send-quote')->attach($this->details['file']);
+        return $this->subject('Quote #'.$this->details['quote_number'].' from ' . config('app.name'))->view('emails.send-quote')->attach($this->details['file']);
     }
 }

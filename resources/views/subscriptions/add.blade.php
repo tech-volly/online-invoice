@@ -1,11 +1,11 @@
-<?php $page="add-subscriptions";?>
+<?php $page = "add-subscriptions"; ?>
 @extends('layout.mainlayout')
 @section('content')
-@component('components.breadcrumb')                
-    @slot('title') {{ $data->id > 0 ? 'Edit' : 'Add' }} Subscription @endslot
-    @slot('li_1') Dashboard @endslot
-    @slot('li_2') Subscriptions @endslot
-    @slot('li_3') {{ $data->id > 0 ? 'Edit' : 'Add' }} Subscription @endslot
+@component('components.breadcrumb')
+@slot('title') {{ $data->id > 0 ? 'Edit' : 'Add' }} Subscription @endslot
+@slot('li_1') Dashboard @endslot
+@slot('li_2') Subscriptions @endslot
+@slot('li_3') {{ $data->id > 0 ? 'Edit' : 'Add' }} Subscription @endslot
 @endcomponent
 
 @include('layout.flash-message')
@@ -25,8 +25,8 @@
                                 <label class="col-lg-3 col-form-label">Subscription Name</label>
                                 <div class="col-lg-9">
                                     <input type="text" class="form-control" aria-describedby="basic-addon2"
-                                    name="subscription_name" id="subscription_name" 
-                                    value="{{$data->subscription_name}}">
+                                        name="subscription_name" id="subscription_name"
+                                        value="{{$data->subscription_name}}">
                                 </div>
                             </div>
                         </div>
@@ -58,25 +58,26 @@
                         </div>
                     </div>
                     <div class="row">
-                        <div class="col-xl-6">
+                        <div class="col-xl-4">
                             <div class="form-group row">
-                                <label class="col-lg-3 col-form-label">Start Date</label>
+                                <label class="col-lg-3 col-form-label">Invoice Date</label>
                                 <div class="col-lg-9">
                                     <div class="cal-icon">
-                                        <input class="form-control floating subscriptionDatetimepicker" type="text" 
-                                        name="subscription_start_date" id="subscription_start_date" 
-                                        value="{{$data->subscription_start_date ? getDateDisplayFormat($data->subscription_start_date) : ''}}">
+                                        <input class="form-control floating subscriptionDatetimepicker" type="text"
+                                            name="subscription_start_date" id="subscription_start_date"
+                                            value="{{$data->subscription_start_date ? getDateDisplayFormat($data->subscription_start_date) : ''}}">
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        <div class="col-xl-6">
+                       
+                        <div class="col-xl-4">
                             <div class="form-group row">
                                 <div class="col-lg-9">
                                     <div class="checkbox">
                                         <label>
                                             <input type="checkbox" name="is_subscription_next_increment" id="is_subscription_next_increment"
-                                            {{$data->is_subscription_next_increment == 1 ? 'checked' : ''}}> 
+                                                {{$data->is_subscription_next_increment == 1 ? 'checked' : ''}}>
                                             &nbsp;&nbsp;(%) increment in next cycle?
                                         </label>
                                     </div>
@@ -85,13 +86,13 @@
                         </div>
                     </div>
                     <div class="row" id="recurring_next_increment_section" style="display:none;">
-                        <div class="col-xl-6">
+                        <div class="col-xl-4">
                             <div class="form-group row">
                                 <label class="col-lg-3 col-form-label">(%) increment in next cycle</label>
                                 <div class="col-lg-9">
                                     <input type="text" class="form-control" aria-describedby="basic-addon2"
-                                    name="subscription_incremented_percentage" id="subscription_incremented_percentage" 
-                                    value="{{$data->is_subscription_next_increment ? $data->subscription_incremented_percentage : ''}}">
+                                        name="subscription_incremented_percentage" id="subscription_incremented_percentage"
+                                        value="{{$data->is_subscription_next_increment ? $data->subscription_incremented_percentage : ''}}">
                                 </div>
                             </div>
                         </div>
@@ -112,9 +113,9 @@
                                     <select class="form-control brand_list" name="brand_id" id="brand_id">
                                         <option selected disabled>Select Brand</option>
                                         @foreach($brands as $brand)
-                                            <option value="{{$brand->id}}" {{$data->brand_id === $brand->id ? 'selected' : ''}}>
-                                                {{$brand->name}}
-                                            </option>
+                                        <option value="{{$brand->id}}" {{$data->brand_id === $brand->id ? 'selected' : ''}}>
+                                            {{$brand->name}}
+                                        </option>
                                         @endforeach
                                     </select>
                                     <label id="errorToShowBrandId"></label>
@@ -130,16 +131,16 @@
                                     <select class="form-control client_list" name="client_id" id="client_id">
                                         <option selected disabled>Select Client</option>
                                         @foreach($clients as $client)
-                                            <option value="{{$client->id}}"  data-client="{{$client->client_number}}" 
-                                                {{$data->client_id === $client->id ? 'selected' : ''}} >
-                                                {{ $client->client_business_name }}
-                                            </option>
+                                        <option value="{{$client->id}}" data-client="{{$client->client_number}}"
+                                            {{$data->client_id === $client->id ? 'selected' : ''}}>
+                                            {{ $client->client_business_name }}
+                                        </option>
                                         @endforeach
                                     </select>
                                     <label id="errorToShow"></label>
                                 </div>
                             </div>
-                        </div> 
+                        </div>
                         <div class="col-xl-6">
                             <div class="form-group row">
                                 <label class="col-lg-3 col-form-label">Client Number</label>
@@ -147,33 +148,46 @@
                                     <input type="text" class="form-control" name="client_number" id="client_number" readonly>
                                 </div>
                             </div>
-                        </div>  
+                        </div>
                     </div>
                     <div class="row">
-                        <div class="col-xl-6">
+                        <div class="col-xl-4">
                             <div class="form-group row">
                                 <label class="col-lg-3 col-form-label">Payment Terms</label>
                                 <div class="col-lg-9">
-                                    <input type="text" class="form-control" name="subscription_payment_terms" id="subscription_payment_terms" 
-                                    value="{{$data->subscription_payment_terms}}">
+                                    <input type="text" class="form-control" name="subscription_payment_terms" id="subscription_payment_terms"
+                                        value="{{$data->subscription_payment_terms}}">
                                 </div>
                             </div>
-                        </div>       
-                        <div class="col-xl-6">
+                        </div>
+                        <div class="col-xl-4">
                             <div class="form-group row">
                                 <label class="col-lg-3 col-form-label">Subscription Due Date</label>
                                 <div class="col-lg-9">
-                                    <input type="text" class="form-control" name="subscription_due_date" id="subscription_due_date" 
-                                    value="{{$data->subscription_due_date ? getDateDisplayFormat($data->subscription_due_date) : ''}}" readonly>
+                                    <input type="text" class="form-control" name="subscription_due_date" id="subscription_due_date"
+                                        value="{{$data->subscription_due_date ? getDateDisplayFormat($data->subscription_due_date) : ''}}" readonly>
                                 </div>
                             </div>
-                        </div>               
+                        </div>
+
+                        <div class="col-xl-4">
+                            <div class="form-group row">
+                                <label class="col-lg-3 col-form-label">End Date</label>
+                                <div class="col-lg-9">
+                                    <div class="cal-icon">
+                                        <input class="form-control floating subscriptionDatetimepicker" type="text"
+                                            name="subscription_next_date" id="subscription_end_date"
+                                            value="{{$data->subscription_next_date ? getDateDisplayFormat($data->subscription_next_date) : ''}}" readonly>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    
+
     <div class="row">
         <div class="col-md-12">
             <div class="card">
@@ -198,77 +212,77 @@
                             </thead>
                             <tbody>
                                 @if($data->subscription_payments->count() > 0)
-                                    @foreach($data->subscription_payments as $subscription_payment)
-                                    <tr id="productRow_1">
-                                        <input type="hidden" name="subscription_payment_id[]" value="{{@$subscription_payment->id}}">
-                                        <td>
-                                            <select class="form-select product_id" name="product_id" id="product_id">
-                                                <option selected disabled>Select Product</option>
-                                                @foreach($products as $product)
-                                                    <option value="{{$product->id}}" {{$subscription_payment->product_id === $product->id ? 'selected' : ''}}>
-                                                        {{ $product->product_name }}
-                                                    </option>
-                                                @endforeach
-                                            </select>
-                                            <input type="hidden" name="hidden_prod_id[]" id="hidden_prod_id">
-                                        </td>
-                                        <td>
-                                            <textarea rows="2" name="product_description" id="product_description" class="form-control">{{$subscription_payment->product_description}}</textarea>
-                                            <input type="hidden" name="hidden_product_description[]" id="hidden_product_description">
-                                        </td>
-                                        <td>
-                                            <input type="text" name="product_unit_price" id="product_unit_price" class="form-control product_unit_price" 
+                                @foreach($data->subscription_payments as $subscription_payment)
+                                <tr id="productRow_1">
+                                    <input type="hidden" name="subscription_payment_id[]" value="{{@$subscription_payment->id}}">
+                                    <td>
+                                        <select class="form-select product_id" name="product_id" id="product_id">
+                                            <option selected disabled>Select Product</option>
+                                            @foreach($products as $product)
+                                            <option value="{{$product->id}}" {{$subscription_payment->product_id === $product->id ? 'selected' : ''}}>
+                                                {{ $product->product_name }}
+                                            </option>
+                                            @endforeach
+                                        </select>
+                                        <input type="hidden" name="hidden_prod_id[]" id="hidden_prod_id">
+                                    </td>
+                                    <td>
+                                        <textarea rows="2" name="product_description" id="product_description" class="form-control">{{$subscription_payment->product_description}}</textarea>
+                                        <input type="hidden" name="hidden_product_description[]" id="hidden_product_description">
+                                    </td>
+                                    <td>
+                                        <input type="text" name="product_unit_price" id="product_unit_price" class="form-control product_unit_price"
                                             value="{{$subscription_payment->product_unit_price}}">
-                                            <input type="hidden" name="hidden_prod_unit_price[]" id="hidden_prod_unit_price">
-                                        </td>
-                                        <td>
-                                            <select class="form-select tax_selection" name="tax_selection" id="tax_selection">
-                                                <option selected disabled>Select Tax</option>
-                                                <option value="GST Inclusive" {{$subscription_payment->tax_selection == 'GST Inclusive' ? 'selected' : ''}}>
-                                                    GST Inclusive
-                                                </option>
-                                                <option value="GST" {{$subscription_payment->tax_selection == 'GST' ? 'selected' : ''}}>
-                                                    GST
-                                                </option>
-                                                <option value="No GST" {{$subscription_payment->tax_selection == 'No GST' ? 'selected' : ''}}>No GST</option>
-                                            </select>
-                                            <input type="hidden" name="hidden_prod_tax_sel[]" id="hidden_prod_tax_sel">
-                                        </td>
-                                        <td>
-                                            <input type="number" min="1" name="product_quantity" id="product_quantity" class="form-control product_quantity" 
+                                        <input type="hidden" name="hidden_prod_unit_price[]" id="hidden_prod_unit_price">
+                                    </td>
+                                    <td>
+                                        <select class="form-select tax_selection" name="tax_selection" id="tax_selection">
+                                            <option selected disabled>Select Tax</option>
+                                            <option value="GST Inclusive" {{$subscription_payment->tax_selection == 'GST Inclusive' ? 'selected' : ''}}>
+                                                GST Inclusive
+                                            </option>
+                                            <option value="GST" {{$subscription_payment->tax_selection == 'GST' ? 'selected' : ''}}>
+                                                GST
+                                            </option>
+                                            <option value="No GST" {{$subscription_payment->tax_selection == 'No GST' ? 'selected' : ''}}>No GST</option>
+                                        </select>
+                                        <input type="hidden" name="hidden_prod_tax_sel[]" id="hidden_prod_tax_sel">
+                                    </td>
+                                    <td>
+                                        <input type="number" min="1" name="product_quantity" id="product_quantity" class="form-control product_quantity"
                                             value="{{$subscription_payment->product_quantity}}">
-                                            <input type="hidden" name="hidden_prod_quantity[]" id="hidden_prod_quantity">
-                                        </td>
-                                        <td>
-                                            <input type="text" name="product_subtotal" id="product_subtotal" class="form-control" 
+                                        <input type="hidden" name="hidden_prod_quantity[]" id="hidden_prod_quantity">
+                                    </td>
+                                    <td>
+                                        <input type="text" name="product_subtotal" id="product_subtotal" class="form-control"
                                             value="$ {{$subscription_payment->product_subtotal}}" readonly>
-                                            <input type="hidden" name="hidden_product_subtotal[]" id="hidden_product_subtotal">
-                                        </td>
-                                        <td>
-                                            <input type="text" name="product_gst" id="product_gst" class="form-control product_gst"
+                                        <input type="hidden" name="hidden_product_subtotal[]" id="hidden_product_subtotal">
+                                    </td>
+                                    <td>
+                                        <input type="text" name="product_gst" id="product_gst" class="form-control product_gst"
                                             value="$ {{$subscription_payment->product_gst}}">
-                                            <input type="hidden" name="hidden_prod_gst[]" id="hidden_prod_gst">
-                                        </td>
-                                        <td>
-                                            <input type="text" name="product_grand_total" id="product_grand_total" class="form-control" readonly
+                                        <input type="hidden" name="hidden_prod_gst[]" id="hidden_prod_gst">
+                                    </td>
+                                    <td>
+                                        <input type="text" name="product_grand_total" id="product_grand_total" class="form-control" readonly
                                             value="$ {{$subscription_payment->product_grand_total}}">
-                                            <input type="hidden" name="hidden_product_grand_total[]" id="hidden_product_grand_total">
-                                        </td>
-                                        <td>
-                                            <a href="javascript:;" data-id="" class="btn btn-danger btn-xs removeRow" id="removeRow"><i class="fa fa-times"></i></a> 
-                                        </td>
-                                    </tr>
-                                    <input type="hidden" name="another_id[]" value="{{@$subscription_payment->id}}">
-                                    @endforeach
+                                        <input type="hidden" name="hidden_product_grand_total[]" id="hidden_product_grand_total">
+                                    </td>
+                                    <td>
+                                        <a href="javascript:;" data-id="" class="btn btn-danger btn-xs removeRow" id="removeRow"><i class="fa fa-times"></i></a>
+                                    </td>
+                                </tr>
+                                <input type="hidden" name="another_id[]" value="{{@$subscription_payment->id}}">
+                                @endforeach
                                 @else
                                 <tr id="productRow_1" class="productClass">
                                     <td>
                                         <select class="form-select product_id" name="product_id" id="product_id">
                                             <option selected disabled>Select Product</option>
                                             @foreach($products as $product)
-                                                <option value="{{$product->id}}" {{$data->product_id === $product->id ? 'selected' : ''}}>
-                                                    {{ $product->product_name }}
-                                                </option>
+                                            <option value="{{$product->id}}" {{$data->product_id === $product->id ? 'selected' : ''}}>
+                                                {{ $product->product_name }}
+                                            </option>
                                             @endforeach
                                         </select>
                                         <input type="hidden" name="hidden_prod_id[]" id="hidden_prod_id">
@@ -278,8 +292,8 @@
                                         <input type="hidden" name="hidden_product_description[]" id="hidden_product_description">
                                     </td>
                                     <td>
-                                        <input type="text" name="product_unit_price" id="product_unit_price" class="form-control product_unit_price" 
-                                        value="">
+                                        <input type="text" name="product_unit_price" id="product_unit_price" class="form-control product_unit_price"
+                                            value="">
                                         <input type="hidden" name="hidden_prod_unit_price[]" id="hidden_prod_unit_price">
                                     </td>
                                     <td>
@@ -305,11 +319,11 @@
                                     </td>
                                     <td>
                                         <input type="text" name="product_grand_total" id="product_grand_total" class="form-control" readonly
-                                        value="$ 0">
+                                            value="$ 0">
                                         <input type="hidden" name="hidden_product_grand_total[]" id="hidden_product_grand_total">
                                     </td>
                                     <td>
-                                        <a href="javascript:;" data-id="" class="btn btn-danger btn-xs removeRow" id="removeRow"><i class="fa fa-times"></i></a> 
+                                        <a href="javascript:;" data-id="" class="btn btn-danger btn-xs removeRow" id="removeRow"><i class="fa fa-times"></i></a>
                                     </td>
                                 </tr>
                                 @endif
@@ -349,14 +363,14 @@
     </div>
 </form>
 <table style="display:none;" id="hiddenTable">
-    <tr class="productClass"  id="lastRowOfProduct">
+    <tr class="productClass" id="lastRowOfProduct">
         <td>
             <select class="form-select product_id" name="product_id" id="product_id">
                 <option selected disabled>Select Product</option>
                 @foreach($products as $product)
-                    <option value="{{$product->id}}" {{$data->product_id === $product->id ? 'selected' : ''}}>
-                        {{ $product->product_name }}
-                    </option>
+                <option value="{{$product->id}}" {{$data->product_id === $product->id ? 'selected' : ''}}>
+                    {{ $product->product_name }}
+                </option>
                 @endforeach
             </select>
             <input type="hidden" name="hidden_prod_id[]" id="hidden_prod_id">
@@ -366,8 +380,8 @@
             <input type="hidden" name="hidden_product_description[]" id="hidden_product_description">
         </td>
         <td>
-            <input type="text" name="product_unit_price" id="product_unit_price" class="form-control product_unit_price" 
-            value="">
+            <input type="text" name="product_unit_price" id="product_unit_price" class="form-control product_unit_price"
+                value="">
             <input type="hidden" name="hidden_prod_unit_price[]" id="hidden_prod_unit_price">
         </td>
         <td>
@@ -393,11 +407,11 @@
         </td>
         <td>
             <input type="text" name="product_grand_total" id="product_grand_total" class="form-control" readonly
-            value="$ 0">
+                value="$ 0">
             <input type="hidden" name="hidden_product_grand_total[]" id="hidden_product_grand_total">
         </td>
         <td>
-            <a href="javascript:;" data-id="" class="btn btn-danger btn-xs removeRow" id="removeRow"><i class="fa fa-times"></i></a> 
+            <a href="javascript:;" data-id="" class="btn btn-danger btn-xs removeRow" id="removeRow"><i class="fa fa-times"></i></a>
         </td>
     </tr>
 </table>

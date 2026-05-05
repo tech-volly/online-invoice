@@ -12,7 +12,8 @@ class ExpenseKey extends Model
 
     protected $fillable = [
         'key',
-        'category_id'
+        'category_id',
+        'supplier_id'
     ];
 
     public $timestamps = false; // since we manually added created_at only

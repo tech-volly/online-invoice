@@ -39,7 +39,8 @@ class ExpenseController extends Controller
         //                 //  ->paginate(5);
 
         // return view('expenses.index', compact('data'));
-        return view('expenses.index');
+           $payment_methods = PaymentMethod::orderBy('payment_method_name', 'asc')->whereIsStatus(1)->get();
+        return view('expenses.index',compact('payment_methods'));
     }
 
     public function getExpenses(Request $request)

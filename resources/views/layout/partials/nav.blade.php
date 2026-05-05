@@ -5,7 +5,7 @@
 'invoice-resources', 'invoice-resources.add', 'invoice-resources.edit', 'invoice-settings', 'estimate-settings', 'subscriptions',
 'subscriptions.add', 'subscriptions.edit', 'quotes', 'quotes.add', 'quotes.edit', 'reports', 'opening-balance', 'email-logs', 'expected-expenses',
 'expected-expenses.edit', 'pending-expense','projects','expense-keys',
-'expense-keys.edit','expense-keys.add']) )
+'expense-keys.edit','expense-keys.add','expense-keys.import-from-keys.review','expense-keys.import-from-keys.process','expenses.import-from-keys.review'])) 
 <div class="sidebar" id="sidebar">
 	<div class="sidebar-inner slimscroll">
 		<div id="sidebar-menu" class="sidebar-menu">

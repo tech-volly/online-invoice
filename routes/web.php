@@ -31,6 +31,7 @@ use App\Http\Controllers\ReportController;
 use App\Http\Controllers\EmailLogController;
 use App\Http\Controllers\ExpectedExpenseController;
 use App\Http\Controllers\ExpenseKeyController;
+use App\Http\Controllers\ImportExpenseFromKeyController;
 use App\Http\Controllers\PendingExpenseController;
 use App\Http\Controllers\Masters\ProjectController;
 
@@ -126,6 +127,13 @@ Route::group(['middleware' => ['auth']], function () {
         Route::get('/get-data', [ExpenseController::class, 'getExpenses']);
     });
 
+
+    // NEW: Import from Keys Routes
+    Route::post('/expenses/import-from-keys/review', [ImportExpenseFromKeyController::class, 'review'])
+        ->name('expenses.import-from-keys.review');
+
+    Route::post('/expenses/import-from-keys/save', [ImportExpenseFromKeyController::class, 'save'])
+        ->name('expenses.import-from-keys.save');
     Route::group(['prefix' => 'expense-keys'], function () {
         Route::get('/', [ExpenseKeyController::class, 'index'])->name('expense-keys');
         Route::get('/add', [ExpenseKeyController::class, 'create'])->name('expense-keys.add');
@@ -135,7 +143,6 @@ Route::group(['middleware' => ['auth']], function () {
         Route::delete('/delete/{id}', [ExpenseKeyController::class, 'destroy'])->name('expense-keys.destroy');
 
         Route::get('/get-data', [ExpenseKeyController::class, 'getData']);
-        
     });
 
 

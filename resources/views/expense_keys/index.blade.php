@@ -21,13 +21,15 @@
         </div>
         @can('expected-expense-create')
         <div class="col-auto float-end ms-auto">
-            <a href="#" class="btn add-btn" data-bs-toggle="modal" data-bs-target="#add_expected_expense"><i class="fa fa-plus"></i> Add Expense Keys</a>
+            <a href="#" class="btn add-btn" data-bs-toggle="modal" data-bs-target="#add_expected_expense">
+                <i class="fa fa-plus"></i> Add Expense Key
+            </a>
         </div>
         @endcan
     </div>
 </div>
-@include('layout.flash-message')
 
+@include('layout.flash-message')
 
 <div class="row">
     <div class="col-md-12">
@@ -43,18 +45,17 @@
                         </th>
                         <th>Keys</th>
                         <th>Expense Category</th>
-                        <th></th>
+                        <th>Supplier</th>
                         <th class="text-center">Action</th>
                     </tr>
                 </thead>
-               
-
                 <tbody></tbody>
             </table>
         </div>
     </div>
 </div>
 
+<!-- ── ADD Modal ──────────────────────────────────────────────────── -->
 <div class="modal custom-modal fade" id="add_expected_expense" role="dialog">
     <div class="modal-dialog modal-dialog-centered" role="document">
         <div class="modal-content">
@@ -68,21 +69,24 @@
                 <form method="post" action="{{ route('expense-keys.store') }}" id="addExpectedExpenseForm">
                     @csrf
                     <div class="form-group">
-                        <label class="col-lg-3 col-form-label">Keys</label>
-                        <div class="col-lg-9">
-                            <input type="text" class="form-control" aria-describedby="basic-addon2"
-                                name="key" id="key">
-
-                        </div>
+                        <label>Key <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" name="key" id="key" placeholder="e.g. CLOUDFLARE">
                     </div>
                     <div class="form-group">
                         <label>Expense Category <span class="text-danger">*</span></label>
                         <select class="select" name="category_id" id="category_id">
                             <option value="">Select Category</option>
                             @foreach($categories as $category)
-                            <option value="{{ $category->id }}">
-                                {{ $category->name }}
-                            </option>
+                                <option value="{{ $category->id }}">{{ $category->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Supplier</label>
+                        <select class="select" name="supplier_id" id="supplier_id">
+                            <option value="">Select Supplier</option>
+                            @foreach($suppliers as $supplier)
+                                <option value="{{ $supplier->id }}">{{ $supplier->supplier_business_name }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -95,6 +99,56 @@
         </div>
     </div>
 </div>
+
+<!-- ── EDIT Modal ─────────────────────────────────────────────────── -->
+<div class="modal custom-modal fade" id="edit_expense_key" role="dialog">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Expense Key</h5>
+                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                {{-- action URL is set dynamically by JS --}}
+                <form method="post" action="" id="editExpenseKeyForm">
+                    @csrf
+                    @method('PUT')
+                    <input type="hidden" name="id" id="edit_key_id">
+
+                    <div class="form-group">
+                        <label>Key <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" name="key" id="edit_key" placeholder="e.g. CLOUDFLARE">
+                    </div>
+                    <div class="form-group">
+                        <label>Expense Category <span class="text-danger">*</span></label>
+                        <select class="select" name="category_id" id="edit_category_id">
+                            <option value="">Select Category</option>
+                            @foreach($categories as $category)
+                                <option value="{{ $category->id }}">{{ $category->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Supplier</label>
+                        <select class="select" name="supplier_id" id="edit_supplier_id">
+                            <option value="">Select Supplier</option>
+                            @foreach($suppliers as $supplier)
+                                <option value="{{ $supplier->id }}">{{ $supplier->supplier_business_name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="submit-section">
+                        <button type="submit" class="btn btn-primary">Update</button>
+                        <a type="button" data-bs-dismiss="modal" class="btn btn-dark">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
 @endsection
 @section('script')
 <script src="{{URL::asset('public/assets/libs/magnific-popup/jquery.magnific-popup.js')}}"></script>

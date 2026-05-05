@@ -147,31 +147,19 @@ class ReportController extends Controller
         return Excel::download(new ExpenseReportExport($params), 'ExpenseReport.xlsx', \Maatwebsite\Excel\Excel::XLSX);
     }
 
-    // public function clientStatement(Request $request) {
-    //     $request->validate([
-    //         'client_id' => 'required|exists:clients,id',
-    //         'from_date' => 'nullable',
-    //         'to_date' => 'nullable',
-    //     ]);
-
-    //     $params = $request->all();
-
-    //     return Excel::download(new ClientStatementExport($params), 'ClientStatement.xlsx', \Maatwebsite\Excel\Excel::XLSX);
-    // }
-
     public function clientStatement(Request $request)
     {
         $request->validate([
             'client_id' => 'required|exists:clients,id',
             'from_date' => 'nullable',
-            'to_date' => 'nullable',
+            'to_date'   => 'nullable',
         ]);
 
         $from_year_month = splitYearMonth($request->from_date);
-        $to_year_month = splitYearMonth($request->to_date);
+        $to_year_month   = splitYearMonth($request->to_date);
 
         $from_date = $from_year_month ? $from_year_month . '-01' : null;
-        $to_date = $to_year_month ? date("Y-m-t", strtotime($to_year_month)) : null;
+        $to_date   = $to_year_month   ? date("Y-m-t", strtotime($to_year_month)) : null;
 
         $query = DB::table('invoices')
             ->leftJoin('clients', 'clients.id', '=', 'invoices.client_id')
@@ -199,56 +187,161 @@ class ReportController extends Controller
             'invoices.invoice_grand_total'
         )
             ->orderBy('invoices.invoice_due_date', 'asc')
-            // dd($query->toSql(), $query->getBindings());
-             ->get();
+            ->get();
 
-        $data = [];
-        $totalInvoice = 0;
-        $totalPaid = 0;
+        $data             = [];
+        $totalInvoice     = 0;
+        $totalPaid        = 0;
         $totalOutstanding = 0;
 
         foreach ($invoices as $value) {
 
-            $invoiceAmount = (float) $value->invoice_grand_total;
+            $invoiceAmount = (float) ($value->invoice_grand_total ?? 0);
+            $status        = strtolower(trim($value->payment_status ?? ''));
 
-            // ✅ IMPORTANT LOGIC
-            $paidAmount = strtolower($value->payment_status) == 'paid'
-                ? $invoiceAmount
-                : 0;
+            // Payment statuses in system: Paid, Unpaid, Cancelled, Hold
+            // Only "paid" means money received — everything else = unpaid/outstanding
+            if ($status === 'paid') {
+                $paidAmount  = $invoiceAmount;
+                $outstanding = 0.00;
+            } else {
+                $paidAmount  = 0.00;
+                $outstanding = $invoiceAmount;
+            }
 
-            $outstanding = $invoiceAmount - $paidAmount;
-
-            $totalInvoice += $invoiceAmount;
-            $totalPaid += $paidAmount;
+            $totalInvoice     += $invoiceAmount;
+            $totalPaid        += $paidAmount;
             $totalOutstanding += $outstanding;
 
             $data[] = [
-                'client_name' => $value->client_business_name,
-                'shipping_name' => trim($value->client_first_name . ' ' . $value->client_last_name),
-                'invoice_number' => $value->invoice_number,
-                'due_date' => $value->invoice_due_date ? changeDateFormatAtExport($value->invoice_due_date) : '',
-                'payment_status' => $value->payment_status,
-                'payment_date' => $value->invoice_payment_date ? changeDateFormatAtExport($value->invoice_payment_date) : '',
-                'invoice_amount' => number_format($invoiceAmount, 2),
-                'paid_amount' => number_format($paidAmount, 2),
+                'client_name'        => $value->client_business_name ?? '',
+                'shipping_name'      => trim(($value->client_first_name ?? '') . ' ' . ($value->client_last_name ?? '')),
+                'invoice_number'     => $value->invoice_number,
+                'due_date'           => $value->invoice_due_date
+                    ? changeDateFormatAtExport($value->invoice_due_date)
+                    : '',
+                'payment_status'     => $value->payment_status ?? '',
+                'payment_date'       => $value->invoice_payment_date
+                    ? changeDateFormatAtExport($value->invoice_payment_date)
+                    : '',
+                'invoice_amount'     => number_format($invoiceAmount, 2),
+                'paid_amount'        => number_format($paidAmount, 2),
                 'outstanding_amount' => number_format($outstanding, 2),
             ];
         }
 
-        // TOTAL
+        // TOTAL row
         $data[] = [
-            'client_name' => '',
-            'shipping_name' => '',
-            'invoice_number' => 'TOTAL',
-            'due_date' => '',
-            'payment_status' => '',
-            'payment_date' => '',
-            'invoice_amount' => number_format($totalInvoice, 2),
-            'paid_amount' => number_format($totalPaid, 2),
+            'client_name'        => '',
+            'shipping_name'      => '',
+            'invoice_number'     => 'TOTAL',
+            'due_date'           => '',
+            'payment_status'     => '',
+            'payment_date'       => '',
+            'invoice_amount'     => number_format($totalInvoice, 2),
+            'paid_amount'        => number_format($totalPaid, 2),
             'outstanding_amount' => number_format($totalOutstanding, 2),
         ];
 
         $pdf = Pdf::loadView('reports.client_statement_pdf', compact('data'));
         return $pdf->download('client-statement.pdf');
     }
+
+
+
+
+    // public function clientStatement(Request $request)
+    // {
+    //     $request->validate([
+    //         'client_id' => 'required|exists:clients,id',
+    //         'from_date' => 'nullable',
+    //         'to_date' => 'nullable',
+    //     ]);
+
+    //     $from_year_month = splitYearMonth($request->from_date);
+    //     $to_year_month = splitYearMonth($request->to_date);
+
+    //     $from_date = $from_year_month ? $from_year_month . '-01' : null;
+    //     $to_date = $to_year_month ? date("Y-m-t", strtotime($to_year_month)) : null;
+
+    //     $query = DB::table('invoices')
+    //         ->leftJoin('clients', 'clients.id', '=', 'invoices.client_id')
+    //         ->leftJoin('payment_statuses', 'payment_statuses.id', '=', 'invoices.payment_status_id')
+    //         ->whereNull('invoices.deleted_at')
+    //         ->where('invoices.client_id', $request->client_id);
+
+    //     if ($from_date) {
+    //         $query->where('invoices.invoice_due_date', '>=', $from_date);
+    //     }
+
+    //     if ($to_date) {
+    //         $query->where('invoices.invoice_due_date', '<=', $to_date);
+    //     }
+
+    //     $invoices = $query->select(
+    //         'invoices.id',
+    //         'invoices.invoice_number',
+    //         'clients.client_business_name',
+    //         'clients.client_first_name',
+    //         'clients.client_last_name',
+    //         'invoices.invoice_due_date',
+    //         'payment_statuses.name as payment_status',
+    //         'invoices.invoice_payment_date',
+    //         'invoices.invoice_grand_total'
+    //     )
+    //         ->orderBy('invoices.invoice_due_date', 'asc')
+    //         // dd($query->toSql(), $query->getBindings());
+    //          ->get();
+
+    //     $data = [];
+    //     $totalInvoice = 0;
+    //     $totalPaid = 0;
+    //     $totalOutstanding = 0;
+
+    //     foreach ($invoices as $value) {
+
+    //         $invoiceAmount = (float) $value->invoice_grand_total;
+
+    //         // ✅ IMPORTANT LOGIC
+    //         $paidAmount = strtolower($value->payment_status) == 'paid'
+    //             ? $invoiceAmount
+    //             : 0;
+
+    //         $outstanding = $invoiceAmount - $paidAmount;
+
+    //         $totalInvoice += $invoiceAmount;
+    //         $totalPaid += $paidAmount;
+    //         $totalOutstanding += $outstanding;
+
+    //         $data[] = [
+    //             'client_name' => $value->client_business_name,
+    //             'shipping_name' => trim($value->client_first_name . ' ' . $value->client_last_name),
+    //             'invoice_number' => $value->invoice_number,
+    //             'due_date' => $value->invoice_due_date ? changeDateFormatAtExport($value->invoice_due_date) : '',
+    //             'payment_status' => $value->payment_status,
+    //             'payment_date' => $value->invoice_payment_date ? changeDateFormatAtExport($value->invoice_payment_date) : '',
+    //             'invoice_amount' => number_format($invoiceAmount, 2),
+    //             'paid_amount' => number_format($paidAmount, 2),
+    //             'outstanding_amount' => number_format($outstanding, 2),
+    //         ];
+    //     }
+
+    //     // TOTAL
+    //     $data[] = [
+    //         'client_name' => '',
+    //         'shipping_name' => '',
+    //         'invoice_number' => 'TOTAL',
+    //         'due_date' => '',
+    //         'payment_status' => '',
+    //         'payment_date' => '',
+    //         'invoice_amount' => number_format($totalInvoice, 2),
+    //         'paid_amount' => number_format($totalPaid, 2),
+    //         'outstanding_amount' => number_format($totalOutstanding, 2),
+    //     ];
+
+    //     $pdf = Pdf::loadView('reports.client_statement_pdf', compact('data'));
+    //     return $pdf->download('client-statement.pdf');
+    // }
+
+
 }

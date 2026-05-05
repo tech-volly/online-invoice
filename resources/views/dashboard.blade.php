@@ -1274,14 +1274,19 @@ $(document).ready(function () {
                 scales: {
                     y: {
                         beginAtZero: true,
+                        // ticks: {
+                        //     callback: function(value) {
+                        //         if (value >= 1000000) {
+                        //             return '$' + (value / 1000000).toFixed(1) + 'M';
+                        //         } else if (value >= 1000) {
+                        //             return '$' + (value / 1000).toFixed(1) + 'K';
+                        //         }
+                        //         return '$' + value.toFixed(0);
+                        //     }
+                        // }
                         ticks: {
                             callback: function(value) {
-                                if (value >= 1000000) {
-                                    return '$' + (value / 1000000).toFixed(1) + 'M';
-                                } else if (value >= 1000) {
-                                    return '$' + (value / 1000).toFixed(1) + 'K';
-                                }
-                                return '$' + value.toFixed(0);
+                                return '$' + Number(value).toFixed(2);
                             }
                         }
                     },

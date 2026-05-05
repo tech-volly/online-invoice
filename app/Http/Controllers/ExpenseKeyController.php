@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Category;
 use App\Models\ExpenseKey;
+use App\Models\Supplier;
 use Illuminate\Http\Request;
 
 class ExpenseKeyController extends Controller
@@ -11,10 +12,11 @@ class ExpenseKeyController extends Controller
 
     public function index()
     {
-        $keys = ExpenseKey::latest()->get();
+        $keys       = ExpenseKey::latest()->get();
         $categories = Category::whereNull('deleted_at')->get();
+        $suppliers  = Supplier::whereNull('deleted_at')->get();
 
-        return view('expense_keys.index', compact('keys', 'categories'));
+        return view('expense_keys.index', compact('keys', 'categories', 'suppliers'));
     }
 
     public function getData(Request $request)
@@ -22,7 +24,8 @@ class ExpenseKeyController extends Controller
         $columns = [
             0 => 'expense_keys.id',
             1 => 'expense_keys.key',
-            2 => 'categories.name'
+            2 => 'categories.name',
+            3 => 'suppliers.supplier_business_name'
         ];
 
         $length = $request->input('length');
@@ -30,15 +33,21 @@ class ExpenseKeyController extends Controller
         $search = $request->input('search.value');
 
         $query = ExpenseKey::leftJoin('categories', 'expense_keys.category_id', '=', 'categories.id')
-            ->select('expense_keys.*', 'categories.name as category_name');
+            ->leftJoin('suppliers', 'expense_keys.supplier_id', '=', 'suppliers.id')
+            ->select(
+                'expense_keys.*',
+                'categories.name as category_name',
+                'suppliers.supplier_business_name as supplier_name'
+            );
 
         $totalData = $query->count();
 
-        // 🔍 SEARCH
+        // SEARCH
         if (!empty($search)) {
             $query->where(function ($q) use ($search) {
                 $q->where('expense_keys.key', 'LIKE', "%{$search}%")
-                    ->orWhere('categories.name', 'LIKE', "%{$search}%");
+                    ->orWhere('categories.name', 'LIKE', "%{$search}%")
+                    ->orWhere('suppliers.supplier_business_name', 'LIKE', "%{$search}%");
             });
         }
 
@@ -47,8 +56,7 @@ class ExpenseKeyController extends Controller
         // ORDER
         if ($request->has('order')) {
             $orderColumnIndex = $request->input('order.0.column');
-            $orderDir = $request->input('order.0.dir');
-
+            $orderDir         = $request->input('order.0.dir');
             if (isset($columns[$orderColumnIndex])) {
                 $query->orderBy($columns[$orderColumnIndex], $orderDir);
             }
@@ -63,41 +71,47 @@ class ExpenseKeyController extends Controller
         foreach ($keys as $k) {
 
             $action = '<div class="dropdown dropdown-action">
-            <a href="#" class="action-icon dropdown-toggle" data-bs-toggle="dropdown">
-                <i class="material-icons">more_vert</i>
-            </a>
-            <div class="dropdown-menu dropdown-menu-right">';
+                <a href="#" class="action-icon dropdown-toggle" data-bs-toggle="dropdown">
+                    <i class="material-icons">more_vert</i>
+                </a>
+                <div class="dropdown-menu dropdown-menu-right">';
 
             if (auth()->user()->can('expense-edit')) {
-                $action .= '<a class="dropdown-item" href="' . route('expense-keys.edit', $k->id) . '">
-                            <i class="fa fa-pencil m-r-5"></i> Edit
-                        </a>';
+                // Pass all field values as data-* attributes so JS can populate the edit modal
+                $action .= '<a class="dropdown-item editKeyBtn"
+                                href="javascript:void(0)"
+                                data-id="'       . $k->id          . '"
+                                data-key="'      . e($k->key)      . '"
+                                data-category="' . ($k->category_id ?? '') . '"
+                                data-supplier="' . ($k->supplier_id ?? '') . '">
+                                <i class="fa fa-pencil m-r-5"></i> Edit
+                            </a>';
             }
 
             if (auth()->user()->can('expense-delete')) {
-                $action .= '<a class="dropdown-item deleteKeyBtn" 
-                            href="javascript:void(0)" 
-                            data-id="' . $k->id . '">
-                            <i class="fa fa-trash-o m-r-5"></i> Delete
-                        </a>';
+                $action .= '<a class="dropdown-item deleteKeyBtn"
+                                href="javascript:void(0)"
+                                data-id="' . $k->id . '">
+                                <i class="fa fa-trash-o m-r-5"></i> Delete
+                            </a>';
             }
 
             $action .= '</div></div>';
 
             $data[] = [
                 'checkbox' => '<input type="checkbox" class="cb-element" value="' . $k->id . '">',
-                'key' => $k->key,
+                'key'      => e($k->key),
                 'category' => $k->category_name ?? '-',
-                'blank' => '',
-                'action' => $action
+                'supplier' => $k->supplier_name  ?? '-',
+                'action'   => $action,
             ];
         }
 
         return response()->json([
-            "draw" => intval($request->input('draw')),
-            "recordsTotal" => $totalData,
+            "draw"            => intval($request->input('draw')),
+            "recordsTotal"    => $totalData,
             "recordsFiltered" => $totalFiltered,
-            "data" => $data
+            "data"            => $data,
         ]);
     }
 
@@ -109,11 +123,12 @@ class ExpenseKeyController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'key' => 'required',
-            'category_id' => 'required'
+            'key'         => 'required',
+            'category_id' => 'required',
+            'supplier_id' => 'nullable|exists:suppliers,id',
         ]);
 
-        ExpenseKey::create($request->all());
+        ExpenseKey::create($request->only('key', 'category_id', 'supplier_id'));
 
         return redirect()->route('expense-keys')->with('success', 'Key added successfully');
     }
@@ -127,12 +142,18 @@ class ExpenseKeyController extends Controller
     public function update(Request $request, $id)
     {
         $request->validate([
-            'key' => 'required',
-            'category_id' => 'required'
+            'key'         => 'required',
+            'category_id' => 'required',
+            'supplier_id' => 'nullable|exists:suppliers,id',
         ]);
 
         $key = ExpenseKey::findOrFail($id);
-        $key->update($request->all());
+        $key->update($request->only('key', 'category_id', 'supplier_id'));
+
+        // Return JSON for AJAX form submit, or redirect for normal submit
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json(['success' => 1, 'message' => 'Key updated successfully']);
+        }
 
         return redirect()->route('expense-keys')->with('success', 'Key updated successfully');
     }
@@ -142,8 +163,6 @@ class ExpenseKeyController extends Controller
         $key = ExpenseKey::findOrFail($id);
         $key->delete();
 
-        return response()->json([
-            'success' => 1
-        ]);
+        return response()->json(['success' => 1]);
     }
 }

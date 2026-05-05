@@ -5,7 +5,7 @@
 'invoice-resources', 'invoice-resources.add', 'invoice-resources.edit', 'invoice-settings', 'estimate-settings', 'subscriptions',
 'subscriptions.add', 'subscriptions.edit', 'quotes', 'quotes.add', 'quotes.edit', 'reports', 'opening-balance', 'email-logs', 'expected-expenses',
 'expected-expenses.edit', 'pending-expense','projects','expense-keys',
-'expense-keys.edit','expense-keys.add','expense-keys.import-from-keys.review','expense-keys.import-from-keys.process','expenses.import-from-keys.review'])) 
+'expense-keys.edit','expense-keys.add','expense-keys.import-from-keys.review','expense-keys.import-from-keys.process','expenses.import-from-keys.review']))
 <div class="sidebar" id="sidebar">
 	<div class="sidebar-inner slimscroll">
 		<div id="sidebar-menu" class="sidebar-menu">
@@ -16,9 +16,9 @@
 				<li class="{{ Route::is('dashboard') ? 'active' : '' }}">
 					<a href="{{ route('dashboard') }}"><i class="la la-dashboard"></i> <span>Dashboard</span></a>
 				</li>
-				<li class="{{ Route::is('expense-keys') ? 'active' : '' }}">
+				<!-- <li class="{{ Route::is('expense-keys') ? 'active' : '' }}">
 					<a href="{{ route('expense-keys') }}"><i class="la la-pie-chart"></i> <span>Expense Keys</span></a>
-				</li>
+				</li> -->
 				@can('client-list')
 				<li class="submenu">
 					<a href="{{route('clients')}}"><i class="la la-users"></i> <span> Clients</span> <span class="menu-arrow"></span></a>
@@ -126,7 +126,7 @@
 				</li>
 				@endcan
 
-				
+
 				@can('invoice-list')
 				<li class="submenu">
 					<a href="{{route('invoices')}}"><i class="la la-file-invoice"></i> <span> Invoices</span> <span class="menu-arrow"></span></a>
@@ -318,6 +318,10 @@
 							</a>
 						</li>
 						@endcan
+
+						<li class="{{ Route::is('expense-keys') ? 'active' : '' }}">
+							<a href="{{ route('expense-keys') }}"> <span>Expense Keys</span></a>
+						</li>
 					</ul>
 				</li>
 				@endcan

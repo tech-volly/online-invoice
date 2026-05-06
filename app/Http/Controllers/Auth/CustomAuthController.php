@@ -39,9 +39,12 @@ class CustomAuthController extends Controller
                 return redirect()->route('login')->withErrors('Your account is blocked. Please contact administrator.'); 
             }
             User::where('email',$email)->update(['failed_login_attempts' => 0]);
-            // return redirect()->route('dashboard');
-            auth()->user()->generateCode();
-            return redirect()->route('verify-account');
+            if(env('APP_ENV') == "local") {
+                return redirect()->route('dashboard');
+            } else {
+                auth()->user()->generateCode();
+                return redirect()->route('verify-account');
+            }
         }else {
             $login = User::where('email','=',$email)->first();
             if(empty($login)){

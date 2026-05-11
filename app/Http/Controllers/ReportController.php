@@ -18,7 +18,7 @@ use App\Models\Expense;
 use Excel;
 use App\Models\Project;
 use App\Models\ExpenseCategory;
-use Barryvdh\DomPDF\Facade\Pdf;
+use PDF;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -403,7 +403,7 @@ class ReportController extends Controller
         $fileName = $clientSlug . $dateLabel . '-statement.pdf';
 
         // ── Generate PDF ──
-        $pdf = Pdf::loadView('reports.client_statement_pdf', [
+        $pdf = PDF::chunkLoadView('<html-separator/>', 'reports.client_statement_pdf', [
             'data'            => $data,
             'client'          => $client,
             'from_date'       => $from_date,

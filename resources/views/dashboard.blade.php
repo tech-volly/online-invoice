@@ -519,7 +519,7 @@
                 <div class="card">
                     <div class="card-body">
                         <div class="card-header" style="background-color: #667eea;">
-                            <h3 class="card-title mb-0">Top Clients by Revenue (FY {{ $data['current_year'] }}-{{ $data['current_year'] + 1 }})</h3>
+                            <h3 class="card-title mb-0">Top Clients by Revenue (FY {{ $data['current_fy_label'] }})</h3>
                             <div class="card-header-actions">
                                 <!-- <button class="btn btn-sm btn-success" onclick="exportClientRevenue('xlsx')">
                                     <i class="fa fa-download"></i> Excel
@@ -539,8 +539,8 @@
                                 <div class="card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
                                     <div class="card-body text-center">
                                         <h5>Current Year Revenue</h5>
-                                        <h3>${{ number_format($data['total_current_revenue'], 2) }}</h3>
-                                        <small>FY {{ $data['current_year'] }}-{{ $data['current_year'] + 1 }}</small>
+                                        <h3>${{ number_format((float)$data['total_current_revenue'], 2) }}</h3>
+                                        <small>FY {{ $data['current_fy_label'] }}</small>
                                     </div>
                                 </div>
                             </div>
@@ -548,8 +548,8 @@
                                 <div class="card" style="background: linear-gradient(135deg, #4b9c7e 0%, #2f6b52 100%); color: white;">
                                     <div class="card-body text-center">
                                         <h5>Previous Year Revenue</h5>
-                                        <h3>${{ number_format($data['total_previous_revenue'], 2) }}</h3>
-                                        <small>FY {{ $data['previous_year'] }}-{{ $data['current_year'] }}</small>
+                                        <h3>${{ number_format((float)$data['total_previous_revenue'], 2) }}</h3>
+                                        <small>FY {{ $data['prev_fy_label'] }}</small>
                                     </div>
                                 </div>
                             </div>
@@ -557,7 +557,7 @@
                                 <div class="card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white;">
                                     <div class="card-body text-center">
                                         <h5>Year-over-Year Change</h5>
-                                        <h3>${{ number_format($data['total_revenue_difference'], 2) }}</h3>
+                                        <h3>${{ number_format((float)$data['total_revenue_difference'], 2) }}</h3>
                                         @if($data['total_revenue_difference'] > 0)
                                             <span class="badge badge-success">
                                                 <i class="fa fa-arrow-up"></i>

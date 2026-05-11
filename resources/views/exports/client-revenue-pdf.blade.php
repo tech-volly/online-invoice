@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <meta charset="UTF-8">
     <title>{{ $title }}</title>
@@ -9,38 +10,42 @@
             padding: 0;
             box-sizing: border-box;
         }
-        
+
+        @page {
+            margin: 20px;
+        }
+
         body {
             font-family: Arial, sans-serif;
             font-size: 12px;
             color: #333;
-            line-height: 1.5;
+            line-height: 1.6;
         }
-        
+
         .header {
             text-align: center;
             margin-bottom: 20px;
             border-bottom: 2px solid #366092;
             padding-bottom: 10px;
         }
-        
+
         .header h1 {
             font-size: 18px;
             color: #366092;
-            margin-bottom: 5px;
+            margin-bottom: 8px;
         }
-        
+
         .header p {
-            font-size: 11px;
+            font-size: 12px;
             color: #666;
         }
-        
+
         .summary {
             display: table;
             width: 100%;
             margin-bottom: 20px;
         }
-        
+
         .summary-item {
             display: table-cell;
             width: 25%;
@@ -48,32 +53,32 @@
             border: 1px solid #ddd;
             background-color: #f5f5f5;
         }
-        
+
         .summary-item label {
             font-weight: bold;
-            font-size: 10px;
+            font-size: 12px;
             display: block;
             margin-bottom: 3px;
             color: #666;
         }
-        
+
         .summary-item .value {
-            font-size: 13px;
+            font-size: 16px;
             font-weight: bold;
             color: #366092;
         }
-        
+
         table {
             width: 100%;
             border-collapse: collapse;
             margin-top: 20px;
         }
-        
+
         thead {
             background-color: #366092;
             color: white;
         }
-        
+
         thead th {
             padding: 10px;
             text-align: left;
@@ -81,58 +86,59 @@
             font-size: 11px;
             border: 1px solid #366092;
         }
-        
+
         tbody td {
             padding: 8px 10px;
             border: 1px solid #ddd;
             font-size: 11px;
         }
-        
+
         tbody tr:nth-child(even) {
             background-color: #f9f9f9;
         }
-        
+
         tbody tr:hover {
             background-color: #f0f0f0;
         }
-        
+
         .text-left {
             text-align: left;
         }
-        
+
         .text-right {
-            text-align: right;
+            text-align: left;
         }
-        
+
         .currency {
-            text-align: right;
+            text-align: left;
             font-family: 'Courier New', monospace;
         }
-        
+
         .percentage {
-            text-align: right;
+            text-align: left;
             font-weight: bold;
         }
-        
+
         .positive {
             color: green;
         }
-        
+
         .negative {
             color: red;
         }
-        
+
         tfoot {
             background-color: #e8e8e8;
             font-weight: bold;
         }
-        
+
         tfoot td {
-            padding: 10px;
+            padding: 12px;
             border: 1px solid #999;
             font-weight: bold;
+             font-size: 11px;
         }
-        
+
         .footer {
             margin-top: 20px;
             padding-top: 10px;
@@ -141,19 +147,20 @@
             text-align: center;
             color: #666;
         }
-        
+
         .page-break {
             page-break-after: always;
         }
     </style>
 </head>
+
 <body>
     <div class="header">
         <h1>{{ $title }}</h1>
         <p>Report generated on {{ $report_date }}</p>
         <p>Financial Year: {{ $current_fy }} @if($compareYear) vs {{ $previous_fy }} @endif</p>
     </div>
-    
+
     <!-- Summary Section -->
     <div class="summary">
         <div class="summary-item">
@@ -172,50 +179,52 @@
             </div>
         </div>
         <div class="summary-item">
-            <label>Overall Change %</label>
+            <label>Revenue Variance %</label>
             <div class="value @if($totalDifference >= 0) positive @else negative @endif">
-                @if($totalDifference >= 0) + @endif 
+                @if($totalDifference >= 0) + @endif
                 {{ $totalPreviousRevenue > 0 ? number_format(($totalDifference / $totalPreviousRevenue) * 100, 2) : 0 }}%
             </div>
         </div>
         @endif
     </div>
-    
+
     <!-- Clients Table -->
     <table>
         <thead>
             <tr>
-                <th class="text-left" style="width: 10%;">Client #</th>
-                <th class="text-left" style="width: 30%;">Client Name</th>
+                <th class="text-left" style="width: 40%;">Client Name</th>
+
                 @if($compareYear)
-                <th class="currency" style="width: 15%;">{{ $previous_fy }}</th>
+                <th class="currency" style="width: 20%;">{{ $previous_fy }}</th>
                 @endif
-                <th class="currency" style="width: 15%;">{{ $current_fy }}</th>
+
+                <th class="currency" style="width: 20%;">{{ $current_fy }}</th>
+
                 @if($compareYear)
-                <th class="currency" style="width: 15%;">Difference</th>
-                <th class="percentage" style="width: 15%;">Change %</th>
+                <th class="currency" style="width: 10%;">Difference</th>
+                <th class="percentage" style="width: 10%;">Change %</th>
                 @endif
             </tr>
         </thead>
         <tbody>
             @foreach($clients as $client)
             <tr>
-                <td class="text-left">{{ $client['client_number'] }}</td>
                 <td class="text-left">{{ $client['client_name'] }}</td>
-                
+
                 @if($compareYear)
                 <td class="currency">${{ number_format($client['previous_year_revenue'], 2) }}</td>
                 @endif
-                
+
                 <td class="currency">${{ number_format($client['current_year_revenue'], 2) }}</td>
-                
+
                 @if($compareYear)
                 <td class="currency @if($client['difference'] >= 0) positive @else negative @endif">
-                    @if($client['difference'] >= 0) + @endif 
+                    @if($client['difference'] >= 0) + @endif
                     ${{ number_format($client['difference'], 2) }}
                 </td>
+
                 <td class="percentage @if($client['percentage_change'] >= 0) positive @else negative @endif">
-                    @if($client['percentage_change'] >= 0) + @endif 
+                    @if($client['percentage_change'] >= 0) + @endif
                     {{ number_format($client['percentage_change'], 2) }}%
                 </td>
                 @endif
@@ -224,30 +233,32 @@
         </tbody>
         <tfoot>
             <tr>
-                <td colspan="2" class="text-left">TOTAL</td>
-                
+                <td class="text-left">TOTAL</td>
+
                 @if($compareYear)
                 <td class="currency">${{ number_format($totalPreviousRevenue, 2) }}</td>
                 @endif
-                
+
                 <td class="currency">${{ number_format($totalCurrentRevenue, 2) }}</td>
-                
+
                 @if($compareYear)
                 <td class="currency @if($totalDifference >= 0) positive @else negative @endif">
-                    @if($totalDifference >= 0) + @endif 
+                    @if($totalDifference >= 0) + @endif
                     ${{ number_format($totalDifference, 2) }}
                 </td>
+
                 <td class="percentage @if($totalDifference >= 0) positive @else negative @endif">
-                    @if($totalDifference >= 0) + @endif 
+                    @if($totalDifference >= 0) + @endif
                     {{ $totalPreviousRevenue > 0 ? number_format(($totalDifference / $totalPreviousRevenue) * 100, 2) : 0 }}%
                 </td>
                 @endif
             </tr>
         </tfoot>
     </table>
-    
+
     <div class="footer">
         <p>This is an automated report. Please verify data accuracy.</p>
     </div>
 </body>
+
 </html>

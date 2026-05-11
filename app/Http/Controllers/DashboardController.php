@@ -907,79 +907,185 @@ class DashboardController extends Controller
         $quarterly_comparison_json = json_encode($quarterly_comparison);
 
         // Client Revenue Data for Dashboard
-        $currentYear = date('Y');
-        $previousYear = $currentYear - 1;
+        // $currentYear = date('Y');
+        // $previousYear = $currentYear - 1;
 
-        // Get all clients by revenue for current FY and use top 10 in chart only
+        // // Get all clients by revenue for current FY and use top 10 in chart only
+        // $allClientsByRevenue = DB::table('invoices')
+        //     ->join('clients', 'invoices.client_id', '=', 'clients.id')
+        //     ->whereNull('invoices.deleted_at')
+        //     ->where('invoices.payment_status_id', '=', '2')
+        //     ->whereNull('clients.deleted_at')
+        //     ->whereBetween('invoices.invoice_payment_date', [($currentYear - 1) . '-07-01', $currentYear . '-06-30'])
+        //     ->selectRaw("
+        //         clients.id,
+        //         clients.client_business_name,
+        //         clients.client_number,
+        //         SUM(invoices.invoice_grand_total) as current_year_revenue
+        //     ")
+        //     ->groupBy('clients.id', 'clients.client_business_name', 'clients.client_number')
+        //     ->orderByDesc('current_year_revenue')
+        //     ->get();
+
+        // $topClients = $allClientsByRevenue->take(10);
+
+        // // Calculate previous year revenue for comparison
+        // $clientRevenueData = [];
+        // $totalCurrentRevenue = 0;
+        // $totalPreviousRevenue = 0;
+
+        // foreach ($topClients as $client) {
+        //     $previousRevenue = $this->getClientRevenueByYear($client->id, $previousYear);
+        //     $difference = $client->current_year_revenue - $previousRevenue;
+        //     $percentageChange = $previousRevenue > 0 ? (($difference / $previousRevenue) * 100) : 0;
+
+        //     $clientRevenueData[] = [
+        //         'id' => $client->id,
+        //         'client_number' => $client->client_number,
+        //         'client_name' => $client->client_business_name,
+        //         'current_revenue' => round($client->current_year_revenue, 2),
+        //         'previous_revenue' => round($previousRevenue, 2),
+        //         'difference' => round($difference, 2),
+        //         'percentage_change' => round($percentageChange, 2)
+        //     ];
+
+        //     $totalCurrentRevenue += $client->current_year_revenue;
+        //     $totalPreviousRevenue += $previousRevenue;
+        // }
+
+        // // Prepare chart data for client revenue
+        // $clientRevenueChartData = [
+        //     'labels' => array_column($clientRevenueData, 'client_name'),
+        //     'datasets' => [
+        //         [
+        //             'label' => 'FY ' . $previousYear . '-' . $currentYear,
+        //             'data' => array_column($clientRevenueData, 'previous_revenue'),
+        //             'backgroundColor' => 'rgba(75, 192, 75, 0.7)',
+        //             'borderColor' => 'rgba(75, 192, 75, 1)',
+        //             'borderWidth' => 2,
+        //         ],
+        //         [
+        //             'label' => 'FY ' . $currentYear . '-' . ($currentYear + 1),
+        //             'data' => array_column($clientRevenueData, 'current_revenue'),
+        //             'backgroundColor' => 'rgba(54, 162, 235, 0.7)',
+        //             'borderColor' => 'rgba(54, 162, 235, 1)',
+        //             'borderWidth' => 2,
+        //         ]
+        //     ]
+        // ];
+
+        // $data['client_revenue_data'] = $clientRevenueData;
+        // $data['total_current_revenue'] = round($totalCurrentRevenue, 2);
+        // $data['total_previous_revenue'] = round($totalPreviousRevenue, 2);
+        // $data['total_revenue_difference'] = round($totalCurrentRevenue - $totalPreviousRevenue, 2);
+        // $data['current_year'] = $currentYear;
+        // $data['previous_year'] = $previousYear;
+
+
+        // Client Revenue Data for Dashboard
+        // Determine current Financial Year (July to June)
+        $today = Carbon::now();
+        if ($today->month >= 7) {
+            // e.g. Aug 2025 → current FY = 2025-2026
+            $currentFyStart = $today->year;        // 2025
+            $currentFyEnd   = $today->year + 1;    // 2026
+        } else {
+            // e.g. Mar 2026 → current FY = 2025-2026
+            $currentFyStart = $today->year - 1;    // 2025
+            $currentFyEnd   = $today->year;        // 2026
+        }
+
+        $prevFyStart = $currentFyStart - 1;
+        $prevFyEnd   = $currentFyEnd   - 1;
+
+        $currentFyFrom = $currentFyStart . '-07-01';
+        $currentFyTo   = $currentFyEnd   . '-06-30';
+        $prevFyFrom    = $prevFyStart    . '-07-01';
+        $prevFyTo      = $prevFyEnd      . '-06-30';
+
+        // ── ALL clients – current FY ──────────────────────────────────────────────
         $allClientsByRevenue = DB::table('invoices')
             ->join('clients', 'invoices.client_id', '=', 'clients.id')
             ->whereNull('invoices.deleted_at')
             ->where('invoices.payment_status_id', '=', '2')
             ->whereNull('clients.deleted_at')
-            ->whereBetween('invoices.invoice_payment_date', [($currentYear - 1) . '-07-01', $currentYear . '-06-30'])
+            ->whereBetween('invoices.invoice_payment_date', [$currentFyFrom, $currentFyTo])
             ->selectRaw("
-                clients.id,
-                clients.client_business_name,
-                clients.client_number,
-                SUM(invoices.invoice_grand_total) as current_year_revenue
-            ")
+        clients.id,
+        clients.client_business_name,
+        clients.client_number,
+        SUM(invoices.invoice_grand_total) as current_year_revenue
+    ")
             ->groupBy('clients.id', 'clients.client_business_name', 'clients.client_number')
             ->orderByDesc('current_year_revenue')
             ->get();
 
-        $topClients = $allClientsByRevenue->take(10);
+        // ── ALL clients – previous FY (single batch query, no N+1) ───────────────
+        $allPrevRevenue = DB::table('invoices')
+            ->whereNull('invoices.deleted_at')
+            ->where('invoices.payment_status_id', '=', '2')
+            ->whereBetween('invoices.invoice_payment_date', [$prevFyFrom, $prevFyTo])
+            ->selectRaw("client_id, SUM(invoice_grand_total) as prev_revenue")
+            ->groupBy('client_id')
+            ->pluck('prev_revenue', 'client_id');  // keyed by client_id
 
-        // Calculate previous year revenue for comparison
-        $clientRevenueData = [];
-        $totalCurrentRevenue = 0;
+        // ── Build revenue data for ALL clients (totals use every client) ──────────
+        $allClientRevenueData = [];
+        $totalCurrentRevenue  = 0;
         $totalPreviousRevenue = 0;
 
-        foreach ($topClients as $client) {
-            $previousRevenue = $this->getClientRevenueByYear($client->id, $previousYear);
-            $difference = $client->current_year_revenue - $previousRevenue;
-            $percentageChange = $previousRevenue > 0 ? (($difference / $previousRevenue) * 100) : 0;
+        foreach ($allClientsByRevenue as $client) {
+            $previousRevenue  = $allPrevRevenue[$client->id] ?? 0;
+            $difference       = $client->current_year_revenue - $previousRevenue;
+            $percentageChange = $previousRevenue > 0
+                ? (($difference / $previousRevenue) * 100)
+                : 0;
 
-            $clientRevenueData[] = [
-                'id' => $client->id,
-                'client_number' => $client->client_number,
-                'client_name' => $client->client_business_name,
-                'current_revenue' => round($client->current_year_revenue, 2),
-                'previous_revenue' => round($previousRevenue, 2),
-                'difference' => round($difference, 2),
-                'percentage_change' => round($percentageChange, 2)
+            $allClientRevenueData[] = [
+                'id'                => $client->id,
+                'client_number'     => $client->client_number,
+                'client_name'       => $client->client_business_name,
+                'current_revenue'   => round($client->current_year_revenue, 2),
+                'previous_revenue'  => round($previousRevenue, 2),
+                'difference'        => round($difference, 2),
+                'percentage_change' => round($percentageChange, 2),
             ];
 
-            $totalCurrentRevenue += $client->current_year_revenue;
+            $totalCurrentRevenue  += $client->current_year_revenue;
             $totalPreviousRevenue += $previousRevenue;
         }
 
-        // Prepare chart data for client revenue
+        // ── Top 10 for chart only ─────────────────────────────────────────────────
+        $top10ClientRevenueData = array_slice($allClientRevenueData, 0, 10);
+
         $clientRevenueChartData = [
-            'labels' => array_column($clientRevenueData, 'client_name'),
+            'labels'   => array_column($top10ClientRevenueData, 'client_name'),
             'datasets' => [
                 [
-                    'label' => 'FY ' . $previousYear . '-' . $currentYear,
-                    'data' => array_column($clientRevenueData, 'previous_revenue'),
+                    'label'           => 'FY ' . $prevFyStart . '-' . $prevFyEnd,
+                    'data'            => array_column($top10ClientRevenueData, 'previous_revenue'),
                     'backgroundColor' => 'rgba(75, 192, 75, 0.7)',
-                    'borderColor' => 'rgba(75, 192, 75, 1)',
-                    'borderWidth' => 2,
+                    'borderColor'     => 'rgba(75, 192, 75, 1)',
+                    'borderWidth'     => 2,
                 ],
                 [
-                    'label' => 'FY ' . $currentYear . '-' . ($currentYear + 1),
-                    'data' => array_column($clientRevenueData, 'current_revenue'),
+                    'label'           => 'FY ' . $currentFyStart . '-' . $currentFyEnd,
+                    'data'            => array_column($top10ClientRevenueData, 'current_revenue'),
                     'backgroundColor' => 'rgba(54, 162, 235, 0.7)',
-                    'borderColor' => 'rgba(54, 162, 235, 1)',
-                    'borderWidth' => 2,
-                ]
-            ]
+                    'borderColor'     => 'rgba(54, 162, 235, 1)',
+                    'borderWidth'     => 2,
+                ],
+            ],
         ];
 
-        $data['client_revenue_data'] = $clientRevenueData;
-        $data['total_current_revenue'] = round($totalCurrentRevenue, 2);
-        $data['total_previous_revenue'] = round($totalPreviousRevenue, 2);
+        $data['client_revenue_data']      = $allClientRevenueData;           // ALL clients
+        $data['total_current_revenue']    = round($totalCurrentRevenue, 2);  // ALL clients
+        $data['total_previous_revenue']   = round($totalPreviousRevenue, 2); // ALL clients
         $data['total_revenue_difference'] = round($totalCurrentRevenue - $totalPreviousRevenue, 2);
-        $data['current_year'] = $currentYear;
-        $data['previous_year'] = $previousYear;
+        $data['current_fy_label']         = $currentFyStart . '-' . $currentFyEnd;
+        $data['prev_fy_label']            = $prevFyStart    . '-' . $prevFyEnd;
+        $data['current_year']             = $currentFyEnd;   // backward compat
+        $data['previous_year']            = $prevFyEnd;
 
         // Sales vs Expenses Trend Analysis - Last 12 months
         $salesVsExpensesTrend = [];

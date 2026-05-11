@@ -221,7 +221,7 @@ class ClientRevenueReportExport implements FromCollection, WithHeadings, ShouldA
         ];
 
         $pdf = PDF::loadView('exports.client-revenue-pdf', $pdfData);
-        $pdf->setPaper('a4', 'landscape');
+        $pdf->setPaper('a4', 'portrait');
         $pdf->setOptions(['defaultFont' => 'sans-serif', 'margin-top' => 10, 'margin-bottom' => 10]);
 
         return $pdf->download($filename);

@@ -137,9 +137,37 @@ class InvoiceController extends Controller
         SEARCH
         */
 
+        // if (!empty($search)) {
+        //     $query->where(function ($q) use ($search) {
+        //         $q->where('invoice_number', 'LIKE', "%$search%");
+        //     });
+        // }
+
+        /*
+SEARCH
+*/
+
         if (!empty($search)) {
             $query->where(function ($q) use ($search) {
-                $q->where('invoice_number', 'LIKE', "%$search%");
+
+                // Invoice fields
+                $q->where('invoice_number', 'LIKE', "%{$search}%")
+                    ->orWhere('invoice_grand_total', 'LIKE', "%{$search}%");
+
+                // Client search
+                $q->orWhereHas('client', function ($clientQuery) use ($search) {
+                    $clientQuery->where('client_business_name', 'LIKE', "%{$search}%");
+                });
+
+                // Project search
+                $q->orWhereHas('project', function ($projectQuery) use ($search) {
+                    $projectQuery->where('name', 'LIKE', "%{$search}%");
+                });
+
+                // Payment Status search
+                $q->orWhereHas('payment_status', function ($statusQuery) use ($search) {
+                    $statusQuery->where('name', 'LIKE', "%{$search}%");
+                });
             });
         }
 

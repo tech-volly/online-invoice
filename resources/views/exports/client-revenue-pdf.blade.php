@@ -158,7 +158,7 @@
     <div class="header">
         <h1>{{ $title }}</h1>
         <p>Report generated on {{ $report_date }}</p>
-        <p>Financial Year: {{ $current_fy }} @if($compareYear) vs {{ $previous_fy }} @endif</p>
+        <p>Financial Year: {{ $previous_fy }} @if($compareYear) vs {{ $current_fy }} @endif</p>
     </div>
 
     <!-- Summary Section -->

@@ -273,20 +273,8 @@
                     </td>
                     <td class="v-align">
                         <div class="invoice-heading">
-                            <h2>Client Statement</h2>
-                            @if($from_date || $to_date)
-                            <p class="statement-period">
-                                @if($from_date && $to_date)
-                                {{ \Carbon\Carbon::parse($from_date)->format('d M Y') }}
-                                &nbsp;&ndash;&nbsp;
-                                {{ \Carbon\Carbon::parse($to_date)->format('d M Y') }}
-                                @elseif($from_date)
-                                From {{ \Carbon\Carbon::parse($from_date)->format('d M Y') }}
-                                @elseif($to_date)
-                                Upto {{ \Carbon\Carbon::parse($to_date)->format('d M Y') }}
-                                @endif
-                            </p>
-                            @endif
+                            <h2>Statement</h2>
+
                         </div>
                     </td>
                 </tr>
@@ -320,15 +308,10 @@
                 <td>&nbsp;</td>
                 <td>
                     <div class="invoice-detail">
-                        @if($client->client_number)
-                        <p>{{$client->client_business_name}} ({{$client->client_number}})</p>
-                        @endif
-                        @if($client->client_email)
-                        <p><span>Email: </span>{{$client->client_email}}</p>
-                        @endif
-                        @if($client->client_phone)
-                        <p><span>Phone: </span>{{$client->client_phone}}</p>
-                        @endif
+
+                       
+                        <p><span>Start Date: </span> {{getFormatedDate($from_date)}}</p>
+                        <p><span>End Date: </span> {{getFormatedDate($to_date)}}</p>
                     </div>
                 </td>
             </tr>
@@ -372,10 +355,10 @@
                     <th width="16%">Invoice No</th>
                     <th width="13%">Due Date</th>
                     <th width="13%">Payment Date</th>
-                    <!-- <th width="13%">Status</th>
+                    <th width="13%">Status</th>
                     <th width="15%" class="text-right">Amount</th>
                     <th width="15%" class="text-right">Paid</th>
-                    <th width="15%" class="text-right">Outstanding</th> -->
+                    <th width="15%" class="text-right">Outstanding</th>
                 </tr>
             </thead>
             <tbody>
@@ -384,10 +367,10 @@
                     <td>{{ $row['invoice_number'] }}</td>
                     <td>{{ $row['due_date'] }}</td>
                     <td>{{ $row['payment_date'] }}</td>
-                    <!-- <td>{{ $row['payment_status'] }}</td>
+                    <td>{{ $row['payment_status'] }}</td>
                         <td class="text-right">{{ $row['invoice_amount'] }}</td>
                         <td class="text-right">{{ $row['paid_amount'] }}</td>
-                        <td class="text-right">{{ $row['outstanding_amount'] }}</td> -->
+                        <td class="text-right">{{ $row['outstanding_amount'] }}</td>
                 </tr>
                 @endforeach
             </tbody>

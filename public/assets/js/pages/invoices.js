@@ -19,7 +19,8 @@ $(document).ready(function () {
                 type: "GET",
                 data: function (d) {
                     d.client = $('#client').val();
-                    d.payment_status = $('#payment_status').val();
+                    // d.payment_status = $('#payment_status').val();
+                    d.payment_status = $('#paymentOption').val();
                     d.from_payment_date = $('#from_payment_date').val();
                     d.to_payment_date = $('#to_payment_date').val();
                 }
@@ -343,26 +344,59 @@ $(document).ready(function () {
         }
     });
 
+    // $(document).on('click', '#searchInvoiceResult', function (e) {
+    //     e.preventDefault();
+    //     var payment_status = $('#paymentOption').val();
+    //     var client = $('#client').val();
+    //     var from_payment_date = $('#from_payment_date').val();
+    //     var to_payment_date = $('#to_payment_date').val();
+    //     if (payment_status == null && client == null && from_payment_date == '' && to_payment_date == '') {
+    //         swal("Oops! Please select atleast one search option to filter record.", {
+    //             icon: "error",
+    //         });
+    //     } else {
+    //         var url = $(this).attr('href') + '?payment_status=' + payment_status + '&client=' + client + '&from_payment_date=' + from_payment_date + '&to_payment_date=' + to_payment_date;
+    //         window.location.href = url;
+    //     }
+    // });
+
     $(document).on('click', '#searchInvoiceResult', function (e) {
         e.preventDefault();
+
         var payment_status = $('#paymentOption').val();
         var client = $('#client').val();
         var from_payment_date = $('#from_payment_date').val();
         var to_payment_date = $('#to_payment_date').val();
-        if (payment_status == null && client == null && from_payment_date == '' && to_payment_date == '') {
-            swal("Oops! Please select atleast one search option to filter record.", {
-                icon: "error",
+
+        if (
+            !payment_status &&
+            !client &&
+            from_payment_date == '' &&
+            to_payment_date == ''
+        ) {
+            swal("Oops! Please select at least one search option to filter record.", {
+                icon: "warning",
             });
-        } else {
-            var url = $(this).attr('href') + '?payment_status=' + payment_status + '&client=' + client + '&from_payment_date=' + from_payment_date + '&to_payment_date=' + to_payment_date;
-            window.location.href = url;
+            return false;
         }
+
+        invoiceTable.ajax.reload();
     });
 
+    // $(document).on('click', '#resetInvoiceResult', function (e) {
+    //     e.preventDefault();
+    //     var url = $(this).attr('href');
+    //     window.location.href = url;
+    // });
     $(document).on('click', '#resetInvoiceResult', function (e) {
         e.preventDefault();
-        var url = $(this).attr('href');
-        window.location.href = url;
+
+        $('#paymentOption').val('').trigger('change');
+        $('#client').val('').trigger('change');
+        $('#from_payment_date').val('');
+        $('#to_payment_date').val('');
+
+        invoiceTable.ajax.reload();
     });
     // Invoice Filter ends
 

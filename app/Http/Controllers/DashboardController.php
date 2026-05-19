@@ -1039,9 +1039,7 @@ class DashboardController extends Controller
         foreach ($allClientsByRevenue as $client) {
             $previousRevenue  = $allPrevRevenue[$client->id] ?? 0;
             $difference       = $client->current_year_revenue - $previousRevenue;
-            $percentageChange = $previousRevenue > 0
-                ? (($difference / $previousRevenue) * 100)
-                : 0;
+            $percentageChange = $this->calculateRevenueVariancePercentage($client->current_year_revenue, $previousRevenue);
 
             $allClientRevenueData[] = [
                 'id'                => $client->id,
@@ -1157,5 +1155,21 @@ class DashboardController extends Controller
             ->sum('invoice_grand_total');
 
         return $revenue ?? 0;
+    }
+
+    private function calculateRevenueVariancePercentage($currentRevenue, $previousRevenue)
+    {
+        $currentRevenue = (float) $currentRevenue;
+        $previousRevenue = (float) $previousRevenue;
+
+        if ($previousRevenue > 0) {
+            return (($currentRevenue - $previousRevenue) / $previousRevenue) * 100;
+        }
+
+        if ($currentRevenue > 0) {
+            return 100;
+        }
+
+        return 0;
     }
 }

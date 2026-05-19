@@ -182,7 +182,7 @@
             <label>Revenue Variance %</label>
             <div class="value @if($totalDifference >= 0) positive @else negative @endif">
                 @if($totalDifference >= 0) + @endif
-                {{ $totalPreviousRevenue > 0 ? number_format(($totalDifference / $totalPreviousRevenue) * 100, 2) : 0 }}%
+                {{ number_format($totalPercentageChange, 2) }}%
             </div>
         </div>
         @endif
@@ -249,7 +249,7 @@
 
                 <td class="percentage @if($totalDifference >= 0) positive @else negative @endif">
                     @if($totalDifference >= 0) + @endif
-                    {{ $totalPreviousRevenue > 0 ? number_format(($totalDifference / $totalPreviousRevenue) * 100, 2) : 0 }}%
+                    {{ number_format($totalPercentageChange, 2) }}%
                 </td>
                 @endif
             </tr>

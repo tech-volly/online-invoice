@@ -20,6 +20,7 @@ use App\Models\Project;
 use App\Models\ExpenseCategory;
 use PDF;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -330,8 +331,18 @@ class ReportController extends Controller
             'invoices.invoice_payment_date',
             'invoices.invoice_grand_total'
         )
-            ->orderBy('invoices.invoice_due_date', 'asc')
-            ->get();
+            ->orderBy('invoices.invoice_due_date', 'asc');
+
+        $this->logReportQuery('Client Statement PDF query', $invoices, [
+            'client_id' => $request->client_id,
+            'from_date_input' => $request->from_date,
+            'to_date_input' => $request->to_date,
+            'from_date' => $from_date,
+            'to_date' => $to_date,
+            'date_filter_column' => 'invoices.invoice_due_date',
+        ]);
+
+        $invoices = $invoices->get();
 
         $data             = [];
         $totalInvoice     = 0;
@@ -383,6 +394,16 @@ class ReportController extends Controller
             'outstanding_amount' => number_format($totalOutstanding, 2),
         ];
 
+        Log::info('Client Statement PDF totals', [
+            'client_id' => $request->client_id,
+            'from_date' => $from_date,
+            'to_date' => $to_date,
+            'total_invoice' => round($totalInvoice, 2),
+            'total_paid' => round($totalPaid, 2),
+            'total_outstanding' => round($totalOutstanding, 2),
+            'invoice_count' => $invoices->count(),
+        ]);
+
         $client          = Client::find($request->client_id);
         $invoice_setting = \App\Models\InvoiceSetting::first();
         $brand           = \App\Models\Brand::find($invoice_setting->brand_id) ?? \App\Models\Brand::first();
@@ -424,5 +445,32 @@ class ReportController extends Controller
 
         // ── Return download from stored file ──
         return $pdf->download($fileName);
+    }
+
+    private function logReportQuery($label, $query, array $params = [])
+    {
+        Log::info($label, [
+            'params' => $params,
+            'sql' => $query->toSql(),
+            'bindings' => $query->getBindings(),
+            'sql_with_bindings' => $this->interpolateQuery($query->toSql(), $query->getBindings()),
+        ]);
+    }
+
+    private function interpolateQuery($sql, array $bindings)
+    {
+        foreach ($bindings as $binding) {
+            if ($binding instanceof \DateTimeInterface) {
+                $binding = $binding->format('Y-m-d H:i:s');
+            }
+
+            $value = is_numeric($binding)
+                ? $binding
+                : "'" . str_replace("'", "''", (string) $binding) . "'";
+
+            $sql = preg_replace('/\?/', $value, $sql, 1);
+        }
+
+        return $sql;
     }
 }

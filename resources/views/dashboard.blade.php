@@ -1243,9 +1243,10 @@ $(document).ready(function () {
                             },
                             afterLabel: function(context) {
                                 if (clientRevenueData.datasets.length > 1 && context.datasetIndex === 0 && clientRevenueData.datasets[1]) {
-                                    var dataset2Value = clientRevenueData.datasets[1].data[context.dataIndex];
-                                    var difference = context.parsed.y - dataset2Value;
-                                    var percentChange = dataset2Value > 0 ? ((difference / dataset2Value) * 100) : 0;
+                                    var previousValue = context.parsed.y;
+                                    var currentValue = parseFloat(clientRevenueData.datasets[1].data[context.dataIndex]) || 0;
+                                    var difference = currentValue - previousValue;
+                                    var percentChange = previousValue > 0 ? ((difference / previousValue) * 100) : (currentValue > 0 ? 100 : 0);
 
                                     return 'Variance: ' + formatAud(difference, 2) + ' (' + percentChange.toFixed(2) + '%)';
                                 }

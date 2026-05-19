@@ -17,6 +17,7 @@ use Maatwebsite\Excel\Events\AfterSheet;
 use Illuminate\Support\Collection;
 use Barryvdh\DomPDF\Facade as PDF;
 use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Support\Facades\Log;
 
 class ClientRevenueReportExport implements FromCollection, WithHeadings, ShouldAutoSize, WithStyles, WithColumnFormatting, WithEvents
 {
@@ -42,7 +43,7 @@ class ClientRevenueReportExport implements FromCollection, WithHeadings, ShouldA
         $data = [];
 
         // PDF/Excel exports must include all clients ordered by highest paid amount.
-        $clients = \DB::table('invoices')
+        $clientsQuery = \DB::table('invoices')
             ->join('clients', 'invoices.client_id', '=', 'clients.id')
             ->whereNull('invoices.deleted_at')
             ->where('invoices.payment_status_id', '=', '2') 
@@ -55,8 +56,16 @@ class ClientRevenueReportExport implements FromCollection, WithHeadings, ShouldA
                 SUM(invoices.invoice_grand_total) as current_year_revenue
             ")
             ->groupBy('clients.id', 'clients.client_business_name', 'clients.client_number')
-            ->orderByDesc('current_year_revenue')
-            ->get();
+            ->orderByDesc('current_year_revenue');
+
+        // $this->logQuery('Client Revenue Excel query', $clientsQuery, [
+        //     'year' => $this->year,
+        //     'compare_year' => $this->compareYear,
+        //     'from_date' => ($this->year - 1) . '-07-01',
+        //     'to_date' => $this->year . '-06-30',
+        // ]);
+
+        $clients = $clientsQuery->get();
 
         foreach ($clients as $client) {
             $previousRevenue = $this->compareYear ? $this->getClientRevenueByYear($client->id, $this->compareYear) : 0;
@@ -172,7 +181,7 @@ class ClientRevenueReportExport implements FromCollection, WithHeadings, ShouldA
         $data = [];
 
         // PDF export includes all clients ordered by highest paid amount.
-        $clients = \DB::table('invoices')
+        $clientsQuery = \DB::table('invoices')
             ->join('clients', 'invoices.client_id', '=', 'clients.id')
             ->whereNull('invoices.deleted_at')
             ->whereNull('clients.deleted_at')
@@ -185,8 +194,16 @@ class ClientRevenueReportExport implements FromCollection, WithHeadings, ShouldA
                 SUM(invoices.invoice_grand_total) as current_year_revenue
             ")
             ->groupBy('clients.id', 'clients.client_business_name', 'clients.client_number')
-            ->orderByDesc('current_year_revenue')
-            ->get();
+            ->orderByDesc('current_year_revenue');
+
+        // $this->logQuery('Client Revenue PDF query', $clientsQuery, [
+        //     'year' => $this->year,
+        //     'compare_year' => $this->compareYear,
+        //     'from_date' => ($this->year - 1) . '-07-01',
+        //     'to_date' => $this->year . '-06-30',
+        // ]);
+
+        $clients = $clientsQuery->get();
 
         $totalCurrentRevenue = 0;
         $totalPreviousRevenue = 0;
@@ -208,6 +225,15 @@ class ClientRevenueReportExport implements FromCollection, WithHeadings, ShouldA
             $totalCurrentRevenue += $client->current_year_revenue;
             $totalPreviousRevenue += $previousRevenue;
         }
+
+        // Log::info('Client Revenue PDF totals', [
+        //     'year' => $this->year,
+        //     'compare_year' => $this->compareYear,
+        //     'total_current_revenue' => round($totalCurrentRevenue, 2),
+        //     'total_previous_revenue' => round($totalPreviousRevenue, 2),
+        //     'total_difference' => round($totalCurrentRevenue - $totalPreviousRevenue, 2),
+        //     'client_count' => $clients->count(),
+        // ]);
 
         $pdfData = [
             'title' => 'Client Revenue Report',
@@ -231,5 +257,32 @@ class ClientRevenueReportExport implements FromCollection, WithHeadings, ShouldA
         $pdf->setOptions(['defaultFont' => 'sans-serif', 'margin-top' => 10, 'margin-bottom' => 10]);
 
         return $pdf->download($filename);
+    }
+
+    private function logQuery($label, $query, array $params = [])
+    {
+        Log::info($label, [
+            'params' => $params,
+            'sql' => $query->toSql(),
+            'bindings' => $query->getBindings(),
+            'sql_with_bindings' => $this->interpolateQuery($query->toSql(), $query->getBindings()),
+        ]);
+    }
+
+    private function interpolateQuery($sql, array $bindings)
+    {
+        foreach ($bindings as $binding) {
+            if ($binding instanceof \DateTimeInterface) {
+                $binding = $binding->format('Y-m-d H:i:s');
+            }
+
+            $value = is_numeric($binding)
+                ? $binding
+                : "'" . str_replace("'", "''", (string) $binding) . "'";
+
+            $sql = preg_replace('/\?/', $value, $sql, 1);
+        }
+
+        return $sql;
     }
 }

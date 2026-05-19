@@ -267,6 +267,7 @@ class ClientRevenueReportExport implements FromCollection, WithHeadings, ShouldA
             'compareYear' => $this->compareYear ? true : false
         ];
 
+        //return view('exports.client-revenue-pdf', $pdfData);
         $pdf = PDF::loadView('exports.client-revenue-pdf', $pdfData);
         $pdf->setPaper('a4', 'portrait');
         $pdf->setOptions(['defaultFont' => 'sans-serif', 'margin-top' => 10, 'margin-bottom' => 10]);

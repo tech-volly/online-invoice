@@ -84,7 +84,7 @@
             text-align: left;
             font-weight: bold;
             font-size: 11px;
-            border: 1px solid #366092;
+            border: 1px solid #ddd; 
         }
 
         tbody td {

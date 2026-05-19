@@ -198,7 +198,7 @@
     <table>
         <thead>
             <tr>
-                <th class="text-left" style="width: 40%;">Client Name</th>
+                <th class="text-left" style="width: 35%;">Client Name</th>
 
                 @if($compareYear)
                 <th class="currency" style="width: 20%;">{{ $previous_fy }}</th>
@@ -208,7 +208,7 @@
 
                 @if($compareYear)
                 <th class="currency" style="width: 10%;">Difference</th>
-                <th class="percentage" style="width: 10%;">Variance %</th>
+                <th class="percentage" style="width: 15%;">Variance %</th>
                 @endif
             </tr>
         </thead>

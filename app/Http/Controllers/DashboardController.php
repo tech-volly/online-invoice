@@ -1009,7 +1009,8 @@ class DashboardController extends Controller
             ->whereNull('invoices.deleted_at')
             ->where('invoices.payment_status_id', '=', '2')
             ->whereNull('clients.deleted_at')
-            ->whereBetween('invoices.invoice_payment_date', [$currentFyFrom, $currentFyTo])
+            ->whereDate('invoices.invoice_payment_date', '>=', $currentFyFrom)
+            ->whereDate('invoices.invoice_payment_date', '<=', $currentFyTo)
             ->selectRaw("
         clients.id,
         clients.client_business_name,
@@ -1024,7 +1025,8 @@ class DashboardController extends Controller
         $allPrevRevenue = DB::table('invoices')
             ->whereNull('invoices.deleted_at')
             ->where('invoices.payment_status_id', '=', '2')
-            ->whereBetween('invoices.invoice_payment_date', [$prevFyFrom, $prevFyTo])
+            ->whereDate('invoices.invoice_payment_date', '>=', $prevFyFrom)
+            ->whereDate('invoices.invoice_payment_date', '<=', $prevFyTo)
             ->selectRaw("client_id, SUM(invoice_grand_total) as prev_revenue")
             ->groupBy('client_id')
             ->pluck('prev_revenue', 'client_id');  // keyed by client_id
@@ -1087,24 +1089,26 @@ class DashboardController extends Controller
         $data['current_year']             = $currentFyEnd;   // backward compat
         $data['previous_year']            = $prevFyEnd;
 
-        // Sales vs Expenses Trend Analysis - Last 12 months
+        // Sales vs Expenses Trend Analysis - current Australian financial year
         $salesVsExpensesTrend = [];
-        $currentDate = Carbon::now();
+        $financial_year_start = Carbon::create($currentFyStart, 7, 1)->startOfDay();
 
-        for ($i = 11; $i >= 0; $i--) {
-            $date = $currentDate->copy()->subMonths($i);
+        for ($i = 0; $i < 12; $i++) {
+            $date = $financial_year_start->copy()->addMonths($i);
             $monthStart = $date->copy()->startOfMonth();
             $monthEnd = $date->copy()->endOfMonth();
 
             // Get sales for the month
             $monthlySales = DB::table('invoices')
-                ->whereBetween('invoice_payment_date', [$monthStart->format('Y-m-d'), $monthEnd->format('Y-m-d')])
+                ->whereDate('invoice_payment_date', '>=', $monthStart->toDateString())
+                ->whereDate('invoice_payment_date', '<=', $monthEnd->toDateString())
                 ->where('invoices.deleted_at', '=', null)
                 ->sum('invoice_grand_total');
 
             // Get expenses for the month
             $monthlyExpenses = DB::table('expenses')
-                ->whereBetween('expense_date', [$monthStart->format('Y-m-d'), $monthEnd->format('Y-m-d')])
+                ->whereDate('expense_date', '>=', $monthStart->toDateString())
+                ->whereDate('expense_date', '<=', $monthEnd->toDateString())
                 ->where('expenses.deleted_at', '=', null)
                 ->sum('expense_amount');
 
@@ -1129,7 +1133,8 @@ class DashboardController extends Controller
      */
     public function exportClientRevenueReport(Request $request)
     {
-        $year = $request->get('year', date('Y'));
+        $currentFinancialYearEnd = Carbon::now()->month >= 7 ? Carbon::now()->year + 1 : Carbon::now()->year;
+        $year = $request->get('year', $currentFinancialYearEnd);
         $compareYear = $request->get('compare_year');
         $format = $request->get('format', 'xlsx');
 

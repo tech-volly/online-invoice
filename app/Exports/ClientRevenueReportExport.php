@@ -28,7 +28,8 @@ class ClientRevenueReportExport implements FromCollection, WithHeadings, ShouldA
 
     public function __construct($year = null, $compareYear = null, $format = 'xlsx')
     {
-        $this->year = $year ?? date('Y');
+        $currentFinancialYearEnd = date('n') >= 7 ? date('Y') + 1 : date('Y');
+        $this->year = $year ?? $currentFinancialYearEnd;
         $this->compareYear = $compareYear;
         $this->format = $format;
     }
@@ -90,6 +91,7 @@ class ClientRevenueReportExport implements FromCollection, WithHeadings, ShouldA
 
         $revenue = Invoice::where('client_id', $clientId)
             ->whereBetween('invoice_payment_date', [$startDate, $endDate])
+            ->where('payment_status_id', '2')
             ->whereNull('deleted_at')
             ->sum('invoice_grand_total');
 
@@ -101,11 +103,11 @@ class ClientRevenueReportExport implements FromCollection, WithHeadings, ShouldA
         $headings = [
             'Client Number',
             'Client Name',
-            'Current Year Revenue (FY ' . $this->year . '-' . ($this->year + 1) . ')',
+            'Current Year Revenue (FY ' . ($this->year - 1) . '-' . $this->year . ')',
         ];
 
         if ($this->compareYear) {
-            $headings[] = 'Previous Year Revenue (FY ' . $this->compareYear . '-' . ($this->compareYear + 1) . ')';
+            $headings[] = 'Previous Year Revenue (FY ' . ($this->compareYear - 1) . '-' . $this->compareYear . ')';
             $headings[] = 'Difference';
             $headings[] = 'Change %';
         }
@@ -128,13 +130,14 @@ class ClientRevenueReportExport implements FromCollection, WithHeadings, ShouldA
 
     public function columnFormats(): array
     {
+        $audFormat = '"$"#,##0.00;[Red]-"$"#,##0.00';
         $formats = [
-            'C' => NumberFormat::FORMAT_CURRENCY_USD_SIMPLE,
+            'C' => $audFormat,
         ];
 
         if ($this->compareYear) {
-            $formats['D'] = NumberFormat::FORMAT_CURRENCY_USD_SIMPLE;
-            $formats['E'] = NumberFormat::FORMAT_CURRENCY_USD_SIMPLE;
+            $formats['D'] = $audFormat;
+            $formats['E'] = $audFormat;
         }
 
         return $formats;

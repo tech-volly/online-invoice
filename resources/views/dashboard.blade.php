@@ -440,7 +440,7 @@
     <div class="col-md-12">
         <div class="card">
             <div class="card-header" style="background-color: #667eea;">
-                <h3 class="card-title mb-0">Sales vs Expenses Trend Analysis</h3>
+                <h3 class="card-title mb-0">Sales vs Expenses Trend Analysis ({{$data['expected_fin_year']}})</h3>
             </div>
             <div class="card-body">
                 <canvas id="salesVsExpensesTrendChart" style="height: 350px;"></canvas>
@@ -924,50 +924,27 @@ $(document).ready(function () {
             type: 'bar',
             data: {
                 labels: quarters,
-                // datasets: [
-                //      {
-                //         label: fyLabel2,
-                //         data: previousYear2Data,
-                //         backgroundColor: '#f59e0b',
-                //         borderColor: '#f59e0b',
-                //         borderWidth: 1
-                //     },
-                //     {
-                //         label: fyLabel1,
-                //         data: previousYear1Data,
-                //         backgroundColor: '#764ba2',
-                //         borderColor: '#764ba2',
-                //         borderWidth: 1
-                //     },
-                //     {
-                //         label: fyLabel,
-                //         data: currentYearData,
-                //         backgroundColor: '#667eea',
-                //         borderColor: '#667eea',
-                //         borderWidth: 1
-                //     }
-                   
-                // ]
+                
                 datasets: [
                     {
                         label: fyLabel2,
                         data: previousYear2Data,
-                        backgroundColor: previousYear2Data.map(v => v >= 0 ? '#f59e0b' : '#ef4444'),
-                        borderColor:     previousYear2Data.map(v => v >= 0 ? '#f59e0b' : '#ef4444'),
+                        backgroundColor: previousYear2Data.map(v => v >= 0 ? '#f59e0b' : '#f59e0b'),
+                        borderColor:     previousYear2Data.map(v => v >= 0 ? '#f59e0b' : '#f59e0b'),
                         borderWidth: 1
                     },
                     {
                         label: fyLabel1,
                         data: previousYear1Data,
-                        backgroundColor: previousYear1Data.map(v => v >= 0 ? '#764ba2' : '#ef4444'),
-                        borderColor:     previousYear1Data.map(v => v >= 0 ? '#764ba2' : '#ef4444'),
+                        backgroundColor: previousYear1Data.map(v => v >= 0 ? '#764ba2' : '#764ba2'),
+                        borderColor:     previousYear1Data.map(v => v >= 0 ? '#764ba2' : '#764ba2'),
                         borderWidth: 1
                     },
                     {
                         label: fyLabel,
                         data: currentYearData,
-                        backgroundColor: currentYearData.map(v => v >= 0 ? '#667eea' : '#ef4444'),
-                        borderColor:     currentYearData.map(v => v >= 0 ? '#667eea' : '#ef4444'),
+                        backgroundColor: currentYearData.map(v => v >= 0 ? '#667eea' : '#667eea'),
+                        borderColor:     currentYearData.map(v => v >= 0 ? '#667eea' : '#667eea'),
                         borderWidth: 1
                     }
                 ]
@@ -1223,6 +1200,12 @@ $(document).ready(function () {
     var clientRevenueCtx = document.getElementById('clientRevenueChart');
     if (clientRevenueCtx) {
         var clientRevenueData = {!! json_encode($clientRevenueChartData) !!};
+        var formatAud = function(value, minimumFractionDigits) {
+            return '$' + new Intl.NumberFormat('en-AU', {
+                minimumFractionDigits: minimumFractionDigits,
+                maximumFractionDigits: minimumFractionDigits
+            }).format(Number(value) || 0);
+        };
 
         new Chart(clientRevenueCtx.getContext('2d'), {
             type: 'bar',
@@ -1256,7 +1239,7 @@ $(document).ready(function () {
                         },
                         callbacks: {
                             label: function(context) {
-                                return context.datasetIndex + 1 + ' FY: $' + context.parsed.y.toFixed(2);
+                                return context.dataset.label + ': ' + formatAud(context.parsed.y, 2);
                             },
                             afterLabel: function(context) {
                                 if (clientRevenueData.datasets.length > 1 && context.datasetIndex === 0 && clientRevenueData.datasets[1]) {
@@ -1264,7 +1247,7 @@ $(document).ready(function () {
                                     var difference = context.parsed.y - dataset2Value;
                                     var percentChange = dataset2Value > 0 ? ((difference / dataset2Value) * 100) : 0;
 
-                                    return 'Change: $' + difference.toFixed(2) + ' (' + percentChange.toFixed(2) + '%)';
+                                    return 'Variance: ' + formatAud(difference, 2) + ' (' + percentChange.toFixed(2) + '%)';
                                 }
                                 return '';
                             }
@@ -1286,7 +1269,7 @@ $(document).ready(function () {
                         // }
                         ticks: {
                             callback: function(value) {
-                                return '$' + Number(value).toFixed(2);
+                                return formatAud(value, 0);
                             }
                         }
                     },

@@ -202,7 +202,7 @@
 
                 @if($compareYear)
                 <th class="currency" style="width: 10%;">Difference</th>
-                <th class="percentage" style="width: 10%;">Change %</th>
+                <th class="percentage" style="width: 10%;">Variance %</th>
                 @endif
             </tr>
         </thead>

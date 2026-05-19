@@ -46,7 +46,7 @@ class ClientRevenueReportExport implements FromCollection, WithHeadings, ShouldA
         $clientsQuery = \DB::table('invoices')
             ->join('clients', 'invoices.client_id', '=', 'clients.id')
             ->whereNull('invoices.deleted_at')
-            ->where('invoices.payment_status_id', '=', '2') 
+            ->where('invoices.payment_status_id', '=', '2')
             ->whereNull('clients.deleted_at')
             ->whereBetween('invoices.invoice_payment_date', [($this->year - 1) . '-07-01', $this->year . '-06-30'])
             ->selectRaw("
@@ -168,7 +168,7 @@ class ClientRevenueReportExport implements FromCollection, WithHeadings, ShouldA
         if ($this->format === 'pdf') {
             return $this->downloadPDF($filename);
         }
-        
+
         // Default to Excel export using Excel facade
         return Excel::download($this, $filename);
     }
@@ -235,6 +235,13 @@ class ClientRevenueReportExport implements FromCollection, WithHeadings, ShouldA
         //     'client_count' => $clients->count(),
         // ]);
 
+        $totalDifference = $totalCurrentRevenue - $totalPreviousRevenue;
+
+        $totalPercentageChange = $this->calculateRevenueVariancePercentage(
+            $totalCurrentRevenue,
+            $totalPreviousRevenue
+        );
+
         $pdfData = [
             'title' => 'Client Revenue Report',
             'report_date' => now()->format('F j, Y'),
@@ -248,6 +255,7 @@ class ClientRevenueReportExport implements FromCollection, WithHeadings, ShouldA
 
             'totalCurrentRevenue' => round($totalCurrentRevenue, 2),
             'totalPreviousRevenue' => round($totalPreviousRevenue, 2),
+            'totalPercentageChange' => round($totalPercentageChange, 2),
             'totalDifference' => round($totalCurrentRevenue - $totalPreviousRevenue, 2),
             'compareYear' => $this->compareYear ? true : false
         ];
@@ -284,5 +292,21 @@ class ClientRevenueReportExport implements FromCollection, WithHeadings, ShouldA
         }
 
         return $sql;
+    }
+
+    private function calculateRevenueVariancePercentage($currentRevenue, $previousRevenue)
+    {
+        $currentRevenue = (float) $currentRevenue;
+        $previousRevenue = (float) $previousRevenue;
+
+        if ($previousRevenue > 0) {
+            return (($currentRevenue - $previousRevenue) / $previousRevenue) * 100;
+        }
+
+        if ($currentRevenue > 0) {
+            return 100;
+        }
+
+        return 0;
     }
 }

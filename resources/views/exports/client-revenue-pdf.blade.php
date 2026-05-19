@@ -136,7 +136,7 @@
             padding: 12px;
             border: 1px solid #999;
             font-weight: bold;
-             font-size: 11px;
+            font-size: 11px;
         }
 
         .footer {
@@ -182,7 +182,13 @@
             <label>Revenue Variance %</label>
             <div class="value @if($totalDifference >= 0) positive @else negative @endif">
                 @if($totalDifference >= 0) + @endif
-                {{ number_format($totalPercentageChange, 2) }}%
+                @if($totalPreviousRevenue > 0)
+                {{ number_format(($totalDifference / $totalPreviousRevenue) * 100, 2) }}%
+                @elseif($totalDifference > 0)
+                100.00%
+                @else
+                0.00%
+                @endif
             </div>
         </div>
         @endif
@@ -249,7 +255,13 @@
 
                 <td class="percentage @if($totalDifference >= 0) positive @else negative @endif">
                     @if($totalDifference >= 0) + @endif
-                    {{ number_format($totalPercentageChange, 2) }}%
+                    @if($totalPreviousRevenue > 0)
+                    {{ number_format(($totalDifference / $totalPreviousRevenue) * 100, 2) }}%
+                    @elseif($totalDifference > 0)
+                    100.00%
+                    @else
+                    0.00%
+                    @endif
                 </td>
                 @endif
             </tr>

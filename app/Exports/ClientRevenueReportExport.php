@@ -70,8 +70,15 @@ class ClientRevenueReportExport implements FromCollection, WithHeadings, ShouldA
         foreach ($clients as $client) {
             $previousRevenue = $this->compareYear ? $this->getClientRevenueByYear($client->id, $this->compareYear) : 0;
             $difference = $client->current_year_revenue - $previousRevenue;
-            $percentageChange = $previousRevenue > 0 ? (($difference / $previousRevenue) * 100) : 0;
+            //$percentageChange = $previousRevenue > 0 ? (($difference / $previousRevenue) * 100) : 0;
 
+            if ($previousRevenue > 0) {
+                $percentageChange = (($difference / $previousRevenue) * 100);
+            } elseif ($client->current_year_revenue > 0) {
+                $percentageChange = 100;
+            } else {
+                $percentageChange = 0;
+            }
             $row = [
                 'client_number' => $client->client_number,
                 'client_name' => $client->client_business_name,
@@ -211,8 +218,15 @@ class ClientRevenueReportExport implements FromCollection, WithHeadings, ShouldA
         foreach ($clients as $client) {
             $previousRevenue = $this->compareYear ? $this->getClientRevenueByYear($client->id, $this->compareYear) : 0;
             $difference = $client->current_year_revenue - $previousRevenue;
-            $percentageChange = $previousRevenue > 0 ? (($difference / $previousRevenue) * 100) : 0;
+            //$percentageChange = $previousRevenue > 0 ? (($difference / $previousRevenue) * 100) : 0;
 
+            if ($previousRevenue > 0) {
+                $percentageChange = (($difference / $previousRevenue) * 100);
+            } elseif ($client->current_year_revenue > 0) {
+                $percentageChange = 100;
+            } else {
+                $percentageChange = 0;
+            }
             $data[] = [
                 'client_number' => $client->client_number,
                 'client_name' => $client->client_business_name,
@@ -235,12 +249,6 @@ class ClientRevenueReportExport implements FromCollection, WithHeadings, ShouldA
         //     'client_count' => $clients->count(),
         // ]);
 
-        $totalDifference = $totalCurrentRevenue - $totalPreviousRevenue;
-
-        $totalPercentageChange = $this->calculateRevenueVariancePercentage(
-            $totalCurrentRevenue,
-            $totalPreviousRevenue
-        );
 
         $pdfData = [
             'title' => 'Client Revenue Report',
@@ -255,7 +263,6 @@ class ClientRevenueReportExport implements FromCollection, WithHeadings, ShouldA
 
             'totalCurrentRevenue' => round($totalCurrentRevenue, 2),
             'totalPreviousRevenue' => round($totalPreviousRevenue, 2),
-            'totalPercentageChange' => round($totalPercentageChange, 2),
             'totalDifference' => round($totalCurrentRevenue - $totalPreviousRevenue, 2),
             'compareYear' => $this->compareYear ? true : false
         ];
@@ -292,21 +299,5 @@ class ClientRevenueReportExport implements FromCollection, WithHeadings, ShouldA
         }
 
         return $sql;
-    }
-
-    private function calculateRevenueVariancePercentage($currentRevenue, $previousRevenue)
-    {
-        $currentRevenue = (float) $currentRevenue;
-        $previousRevenue = (float) $previousRevenue;
-
-        if ($previousRevenue > 0) {
-            return (($currentRevenue - $previousRevenue) / $previousRevenue) * 100;
-        }
-
-        if ($currentRevenue > 0) {
-            return 100;
-        }
-
-        return 0;
     }
 }

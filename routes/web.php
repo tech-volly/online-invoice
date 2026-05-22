@@ -138,6 +138,7 @@ Route::group(['middleware' => ['auth']], function () {
         Route::get('/', [ExpenseKeyController::class, 'index'])->name('expense-keys');
         Route::get('/add', [ExpenseKeyController::class, 'create'])->name('expense-keys.add');
         Route::post('/store/action', [ExpenseKeyController::class, 'store'])->name('expense-keys.store');
+        Route::post('/import', [ExpenseKeyController::class, 'import'])->name('expense-keys.import');
         Route::get('/edit/{id}', [ExpenseKeyController::class, 'edit'])->name('expense-keys.edit');
         Route::put('/update/{id}', [ExpenseKeyController::class, 'update'])->name('expense-keys.update');
         Route::delete('/delete/{id}', [ExpenseKeyController::class, 'destroy'])->name('expense-keys.destroy');

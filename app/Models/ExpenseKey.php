@@ -21,6 +21,11 @@ class ExpenseKey extends Model
     // Relationship (optional)
     public function category()
     {
-        return $this->belongsTo(Category::class);
+        return $this->belongsTo(ExpenseCategory::class, 'category_id');
+    }
+
+    public function supplier()
+    {
+        return $this->belongsTo(Supplier::class);
     }
 }

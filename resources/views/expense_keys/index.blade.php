@@ -21,6 +21,9 @@
         </div>
         @can('expected-expense-create')
         <div class="col-auto float-end ms-auto">
+            <a href="#" class="btn add-btn me-2" data-bs-toggle="modal" data-bs-target="#import_expense_keys">
+                <i class="fa fa-upload"></i> Import Expense Keys
+            </a>
             <a href="#" class="btn add-btn" data-bs-toggle="modal" data-bs-target="#add_expected_expense">
                 <i class="fa fa-plus"></i> Add Expense Key
             </a>
@@ -51,6 +54,33 @@
                 </thead>
                 <tbody></tbody>
             </table>
+        </div>
+    </div>
+</div>
+
+<!-- ── IMPORT Modal ───────────────────────────────────────────────── -->
+<div class="modal custom-modal fade" id="import_expense_keys" role="dialog">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Import Expense Keys</h5>
+                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form method="post" action="{{ route('expense-keys.import') }}" enctype="multipart/form-data">
+                    @csrf
+                    <div class="form-group">
+                        <label>Excel File <span class="text-danger">*</span></label>
+                        <input type="file" class="form-control" name="import_expense_keys_file" accept=".xls,.xlsx,.csv" required>
+                    </div>
+                    <div class="submit-section">
+                        <button type="submit" class="btn btn-primary">Import</button>
+                        <a type="button" data-bs-dismiss="modal" class="btn btn-dark">Cancel</a>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 </div>

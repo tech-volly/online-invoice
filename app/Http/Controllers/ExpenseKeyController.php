@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Category;
+use App\Imports\ExpenseKeysImport;
+use App\Models\ExpenseCategory;
 use App\Models\ExpenseKey;
 use App\Models\Supplier;
 use Illuminate\Http\Request;
+use Maatwebsite\Excel\Facades\Excel;
 
 class ExpenseKeyController extends Controller
 {
@@ -13,7 +15,7 @@ class ExpenseKeyController extends Controller
     public function index()
     {
         $keys       = ExpenseKey::latest()->get();
-        $categories = Category::whereNull('deleted_at')->get();
+        $categories = ExpenseCategory::whereNull('deleted_at')->orderBy('name')->get();
         $suppliers  = Supplier::whereNull('deleted_at')->get();
 
         return view('expense_keys.index', compact('keys', 'categories', 'suppliers'));
@@ -24,7 +26,7 @@ class ExpenseKeyController extends Controller
         $columns = [
             0 => 'expense_keys.id',
             1 => 'expense_keys.key',
-            2 => 'categories.name',
+            2 => 'expense_categories.name',
             3 => 'suppliers.supplier_business_name'
         ];
 
@@ -32,11 +34,11 @@ class ExpenseKeyController extends Controller
         $start  = $request->input('start');
         $search = $request->input('search.value');
 
-        $query = ExpenseKey::leftJoin('categories', 'expense_keys.category_id', '=', 'categories.id')
+        $query = ExpenseKey::leftJoin('expense_categories', 'expense_keys.category_id', '=', 'expense_categories.id')
             ->leftJoin('suppliers', 'expense_keys.supplier_id', '=', 'suppliers.id')
             ->select(
                 'expense_keys.*',
-                'categories.name as category_name',
+                'expense_categories.name as category_name',
                 'suppliers.supplier_business_name as supplier_name'
             );
 
@@ -46,7 +48,7 @@ class ExpenseKeyController extends Controller
         if (!empty($search)) {
             $query->where(function ($q) use ($search) {
                 $q->where('expense_keys.key', 'LIKE', "%{$search}%")
-                    ->orWhere('categories.name', 'LIKE', "%{$search}%")
+                    ->orWhere('expense_categories.name', 'LIKE', "%{$search}%")
                     ->orWhere('suppliers.supplier_business_name', 'LIKE', "%{$search}%");
             });
         }
@@ -124,7 +126,7 @@ class ExpenseKeyController extends Controller
     {
         $request->validate([
             'key'         => 'required',
-            'category_id' => 'required',
+            'category_id' => 'required|exists:expense_categories,id',
             'supplier_id' => 'nullable|exists:suppliers,id',
         ]);
 
@@ -143,7 +145,7 @@ class ExpenseKeyController extends Controller
     {
         $request->validate([
             'key'         => 'required',
-            'category_id' => 'required',
+            'category_id' => 'required|exists:expense_categories,id',
             'supplier_id' => 'nullable|exists:suppliers,id',
         ]);
 
@@ -156,6 +158,32 @@ class ExpenseKeyController extends Controller
         }
 
         return redirect()->route('expense-keys')->with('success', 'Key updated successfully');
+    }
+
+    public function import(Request $request)
+    {
+        $request->validate([
+            'import_expense_keys_file' => 'required|file|mimes:xls,xlsx,csv,txt|max:10240',
+        ]);
+
+        $import = new ExpenseKeysImport();
+        Excel::import($import, $request->file('import_expense_keys_file'));
+
+        $message = "{$import->imported} expense key(s) imported successfully.";
+        if ($import->createdCategories > 0) {
+            $message .= " {$import->createdCategories} expense categor" . ($import->createdCategories === 1 ? 'y' : 'ies') . " created.";
+        }
+        if ($import->createdSuppliers > 0) {
+            $message .= " {$import->createdSuppliers} supplier(s) created.";
+        }
+        if ($import->updated > 0) {
+            $message .= " {$import->updated} existing key(s) updated.";
+        }
+        if ($import->skipped > 0) {
+            $message .= " {$import->skipped} row(s) skipped.";
+        }
+
+        return redirect()->route('expense-keys')->with('success', $message);
     }
 
     public function destroy($id)

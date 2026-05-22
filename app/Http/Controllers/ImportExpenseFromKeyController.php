@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Category;
 use App\Models\Expense;
+use App\Models\ExpenseCategory;
 use App\Models\ExpenseKey;
 use App\Models\PaymentMethod;
 use App\Models\Supplier;
@@ -35,7 +35,7 @@ class ImportExpenseFromKeyController extends Controller
 
         // Dropdowns for the review table
         $suppliers       = Supplier::whereNull('deleted_at')->orderBy('supplier_business_name')->get();
-        $categories      = Category::whereNull('deleted_at')->orderBy('name')->get();
+        $categories      = ExpenseCategory::whereNull('deleted_at')->orderBy('name')->get();
         $payment_methods = PaymentMethod::orderBy('payment_method_name')->whereIsStatus(1)->get();
 
         // Match each CSV row description against expense keys

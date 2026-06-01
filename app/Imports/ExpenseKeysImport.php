@@ -8,8 +8,9 @@ use App\Models\Supplier;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
+use Maatwebsite\Excel\Concerns\WithMultipleSheets;
 
-class ExpenseKeysImport implements ToCollection, WithHeadingRow
+class ExpenseKeysImport implements WithMultipleSheets
 {
     public $imported = 0;
     public $updated = 0;
@@ -17,14 +18,21 @@ class ExpenseKeysImport implements ToCollection, WithHeadingRow
     public $createdCategories = 0;
     public $createdSuppliers = 0;
 
-    public function collection(Collection $rows)
+    public function sheets(): array
+    {
+        return [
+            'Supplier Summary' => new ExpenseKeysSupplierSummarySheetImport($this),
+        ];
+    }
+
+    public function importSupplierSummary(Collection $rows)
     {
         foreach ($rows as $row) {
             $supplierName = $this->value($row, ['supplier', 'supiler', 'vendor']);
-            $key          = $this->value($row, ['key_word', 'keyword', 'key', 'keys']);
-            $categoryName = $this->value($row, ['expense_category', 'default_expense_categories', 'category']);
+            $keywords     = $this->keywords($this->value($row, ['possible_key_words', 'key_words', 'keywords', 'key_word']));
+            $categoryName = $this->value($row, ['default_expense_categories', 'expense_category', 'category']);
 
-            if ($supplierName === '' || $key === '' || $categoryName === '') {
+            if ($supplierName === '' || empty($keywords) || $categoryName === '') {
                 $this->skipped++;
                 continue;
             }
@@ -32,29 +40,36 @@ class ExpenseKeysImport implements ToCollection, WithHeadingRow
             $category = $this->firstOrCreateCategory($categoryName);
             $supplier = $this->firstOrCreateSupplier($supplierName, $category->id);
 
-            $expenseKey = ExpenseKey::withTrashed()
-                ->where('key', $key)
-                ->where('supplier_id', $supplier->id)
-                ->first();
-
-            if ($expenseKey) {
-                $expenseKey->category_id = $category->id;
-                $expenseKey->supplier_id = $supplier->id;
-                if ($expenseKey->trashed()) {
-                    $expenseKey->restore();
-                }
-                $expenseKey->save();
-                $this->updated++;
-            } else {
-                ExpenseKey::create([
-                    'key' => $key,
-                    'category_id' => $category->id,
-                    'supplier_id' => $supplier->id,
-                ]);
+            foreach ($keywords as $keyword) {
+                $this->createOrUpdateExpenseKey($keyword, $category->id, $supplier->id);
             }
-
-            $this->imported++;
         }
+    }
+
+    private function createOrUpdateExpenseKey(string $key, int $categoryId, int $supplierId): void
+    {
+        $expenseKey = ExpenseKey::withTrashed()
+            ->where('key', $key)
+            ->where('supplier_id', $supplierId)
+            ->first();
+
+        if ($expenseKey) {
+            $expenseKey->category_id = $categoryId;
+            $expenseKey->supplier_id = $supplierId;
+            if ($expenseKey->trashed()) {
+                $expenseKey->restore();
+            }
+            $expenseKey->save();
+            $this->updated++;
+        } else {
+            ExpenseKey::create([
+                'key' => $key,
+                'category_id' => $categoryId,
+                'supplier_id' => $supplierId,
+            ]);
+        }
+
+        $this->imported++;
     }
 
     private function firstOrCreateCategory(string $name): ExpenseCategory
@@ -125,5 +140,31 @@ class ExpenseKeysImport implements ToCollection, WithHeadingRow
         }
 
         return '';
+    }
+
+    private function keywords(string $value): array
+    {
+        $keywords = array_map('trim', explode(',', $value));
+        $keywords = array_filter($keywords, function ($keyword) {
+            return $keyword !== '';
+        });
+
+        return array_values(array_unique($keywords));
+    }
+
+}
+
+class ExpenseKeysSupplierSummarySheetImport implements ToCollection, WithHeadingRow
+{
+    private $import;
+
+    public function __construct(ExpenseKeysImport $import)
+    {
+        $this->import = $import;
+    }
+
+    public function collection(Collection $rows)
+    {
+        $this->import->importSupplierSummary($rows);
     }
 }

@@ -44,10 +44,10 @@ class ImportExpenseFromKeyController extends Controller
             $row['matched_category_id'] = null;
             $row['matched_supplier_id'] = null;
 
-            $description = strtolower(trim($row['description']));
+            $description = $this->normalizeMatchText($row['description']);
 
             foreach ($expenseKeys as $ek) {
-                $keyword = strtolower(trim($ek->key));
+                $keyword = $this->normalizeMatchText($ek->key);
                 if (empty($keyword)) continue;
 
                 if (str_contains($description, $keyword)) {
@@ -171,15 +171,25 @@ class ImportExpenseFromKeyController extends Controller
             return $rows;
         }
 
+        $hasStarted = false;
+
         while (($line = fgetcsv($handle)) !== false) {
-            if (empty(array_filter($line))) continue;
+            if (empty(array_filter($line))) {
+                if ($hasStarted) {
+                    break;
+                }
+                continue;
+            }
 
             $description = trim($line[$map['description']] ?? '');
-            $amount      = (float) str_replace([',', '$', '"'], '', trim($line[$map['amount']] ?? '0'));
             $date        = trim($line[$map['date']] ?? '');
+            $amount      = (float) str_replace([',', '$', '"'], '', trim($line[$map['amount']] ?? '0'));
 
-            if (empty($description) && $amount == 0) continue;
+            if ($description === '' || $amount == 0 || $this->parseDate($date) === null) {
+                continue;
+            }
 
+            $hasStarted = true;
             $rows[] = compact('date', 'description', 'amount');
         }
 
@@ -199,5 +209,10 @@ class ImportExpenseFromKeyController extends Controller
 
         $ts = strtotime($raw);
         return $ts ? date('Y-m-d', $ts) : null;
+    }
+
+    private function normalizeMatchText(string $value): string
+    {
+        return strtolower(trim(preg_replace('/\s+/', ' ', $value)));
     }
 }

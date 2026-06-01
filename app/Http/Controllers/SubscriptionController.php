@@ -494,8 +494,17 @@ class SubscriptionController extends Controller
         $prev_end_date = date("Y-m-t", strtotime($prev_start_date));
 
         try {
-            $change_due_date = Subscription::where('subscription_cycle', '=', 'yearly')->whereBetween('subscription_due_date', [$prev_start_date, $prev_end_date])
-                ->update(['subscription_due_date' => DB::raw("subscription_due_date + INTERVAL 1 YEAR")]);
+            $subscriptions = Subscription::where('subscription_cycle', '=', 'yearly')
+                ->whereBetween('subscription_due_date', [$prev_start_date, $prev_end_date])
+                ->get();
+
+            foreach ($subscriptions as $subscription) {
+                $payment_terms = (int) $subscription->subscription_payment_terms;
+                $invoice_date = Carbon::create($subscription->subscription_due_date)->subDays($payment_terms)->addYear();
+
+                $subscription->subscription_due_date = $invoice_date->copy()->addDays($payment_terms)->format('Y-m-d');
+                $subscription->save();
+            }
 
             return "Subscription due date is updated successfully.";
         }catch(Exception $e) {
@@ -503,6 +512,24 @@ class SubscriptionController extends Controller
         }
 
     }
+
+    //old cron 1jun 2026 HP
+    // public function changeSubscriptionDueDate() {
+    //     $prev_month_year = date('Y-m', strtotime("-1 month"));
+    //     // $prev_month_year = '2022-08';
+    //     $prev_start_date = $prev_month_year.'-'.'01';
+    //     $prev_end_date = date("Y-m-t", strtotime($prev_start_date));
+
+    //     try {
+    //         $change_due_date = Subscription::where('subscription_cycle', '=', 'yearly')->whereBetween('subscription_due_date', [$prev_start_date, $prev_end_date])
+    //             ->update(['subscription_due_date' => DB::raw("subscription_due_date + INTERVAL 1 YEAR")]);
+
+    //         return "Subscription due date is updated successfully.";
+    //     }catch(Exception $e) {
+    //         return "Error in updating subscription due date.";
+    //     }
+
+    // }
     //Subscription cron functions ends
 
     public function exportSubscriptions() {

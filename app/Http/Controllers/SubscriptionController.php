@@ -22,6 +22,7 @@ use PDF;
 use File;
 use DB;
 use Exception;
+use Illuminate\Support\Facades\Log;
 
 class SubscriptionController extends Controller
 {
@@ -273,7 +274,9 @@ class SubscriptionController extends Controller
     //Subscription cron functions starts
     public function recurringSubscriptionCron() {
         echo "in cron function".'<br>';
+        Log:info('Recurring Subscription Cron job started at: ' . Carbon::now());
         $subscriptions = Subscription::with(['client','brand','subscription_payments.product'])->whereSubscriptionNextDate(Carbon::today())->get();
+        Log::info('Cron job executed. Subscriptions found: ' . $subscriptions->count());
         foreach($subscriptions as $subscription) {
             $current_date = date('Y-m-d');    
             if($subscription->subscription_cycle == "daily") {
@@ -487,6 +490,38 @@ class SubscriptionController extends Controller
         return $return;
     }
 
+    // public function changeSubscriptionDueDate() {
+    //     $prev_month_year = date('Y-m', strtotime("-1 month"));
+    //     // $prev_month_year = '2022-08';
+    //     $prev_start_date = $prev_month_year.'-'.'01';
+    //     $prev_end_date = date("Y-m-t", strtotime($prev_start_date));
+    //     Log::info('Change Subscription Due Date Cron job started at: ' . Carbon::now());
+    //     Log::info('Change Subscription Due Date Cron job executed. Previous month: ' . $prev_start_date . ' to ' . $prev_end_date);
+
+    //     try {
+    //         $subscriptions = Subscription::where('subscription_cycle', '=', 'yearly')
+    //             ->whereBetween('subscription_due_date', [$prev_start_date, $prev_end_date])
+    //             ->get();
+
+    //         Log::info('Subscriptions found for due date change: ' . $subscriptions->count());
+    //         foreach ($subscriptions as $subscription) {
+    //             Log::info('Updating Subscription ID: ' . $subscription->id . ' with current due date: ' . $subscription->subscription_due_date);
+    //             $payment_terms = (int) $subscription->subscription_payment_terms;
+    //             $invoice_date = Carbon::create($subscription->subscription_due_date)->subDays($payment_terms)->addYear();
+
+    //             $subscription->subscription_due_date = $invoice_date->copy()->addDays($payment_terms)->format('Y-m-d');
+    //             $subscription->save();
+    //             Log::info('Subscription ID: ' . $subscription->id . ' due date updated to: ' . $subscription->subscription_due_date);
+    //         }
+
+    //         return "Subscription due date is updated successfully.";
+    //     }catch(Exception $e) {
+    //         return "Error in updating subscription due date.";
+    //     }
+
+    // }
+
+    //old cron 1jun 2026 HP
     public function changeSubscriptionDueDate() {
         $prev_month_year = date('Y-m', strtotime("-1 month"));
         // $prev_month_year = '2022-08';
@@ -512,24 +547,6 @@ class SubscriptionController extends Controller
         }
 
     }
-
-    //old cron 1jun 2026 HP
-    // public function changeSubscriptionDueDate() {
-    //     $prev_month_year = date('Y-m', strtotime("-1 month"));
-    //     // $prev_month_year = '2022-08';
-    //     $prev_start_date = $prev_month_year.'-'.'01';
-    //     $prev_end_date = date("Y-m-t", strtotime($prev_start_date));
-
-    //     try {
-    //         $change_due_date = Subscription::where('subscription_cycle', '=', 'yearly')->whereBetween('subscription_due_date', [$prev_start_date, $prev_end_date])
-    //             ->update(['subscription_due_date' => DB::raw("subscription_due_date + INTERVAL 1 YEAR")]);
-
-    //         return "Subscription due date is updated successfully.";
-    //     }catch(Exception $e) {
-    //         return "Error in updating subscription due date.";
-    //     }
-
-    // }
     //Subscription cron functions ends
 
     public function exportSubscriptions() {

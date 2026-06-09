@@ -26,22 +26,19 @@ use Illuminate\Support\Facades\Log;
 
 class SubscriptionController extends Controller
 {
-    function __construct()
-    {
-        $this->middleware('permission:subscription-list|subscription-create|subscription-edit|subscription-delete', ['only' => ['index', 'store']]);
-        $this->middleware('permission:subscription-create', ['only' => ['addSubscription', 'store']]);
-        $this->middleware('permission:subscription-edit', ['only' => ['addSubscription', 'update']]);
+    function __construct() {
+        $this->middleware('permission:subscription-list|subscription-create|subscription-edit|subscription-delete', ['only' => ['index','store']]);
+        $this->middleware('permission:subscription-create', ['only' => ['addSubscription','store']]);
+        $this->middleware('permission:subscription-edit', ['only' => ['addSubscription','update']]);
         $this->middleware('permission:subscription-delete', ['only' => ['deleteSubscription']]);
     }
 
-    public function index()
-    {
+    public function index() {
         $data = Subscription::with(['client'])->orderBy('id', 'desc')->get();
         return view('subscriptions.index', compact('data'));
     }
 
-    public function addSubscription($id = "")
-    {
+    public function addSubscription($id = "") {
         $clients = Client::orderBy('client_business_name', 'asc')->whereIsStatus(1)->get();
         $products = Product::orderBy('product_name', 'asc')->whereIsStatus(1)->get();
         $brands = Brand::orderBy('name', 'asc')->whereIsStatus(1)->get();
@@ -51,24 +48,23 @@ class SubscriptionController extends Controller
         } else if ($id > 0) {
             $data = Subscription::where('id', $id)->with(['subscription_payments.product'])->first();
         }
-        return view('subscriptions.add', compact('data', 'clients', 'products', 'brands', 'payment_statuses'));
+        return view('subscriptions.add', compact('data', 'clients', 'products','brands', 'payment_statuses'));
     }
 
-    public function addSubscriptionAction(Request $request)
-    {
+    public function addSubscriptionAction(Request $request) {
 
         $post_array = $request->post();
         $payment_status_id = getPaymentStatusId();
         $id = (isset($post_array['id']) && $post_array['id'] > 0) ? $post_array['id'] : 0;
 
         $action_id = $request->subscription_payment_id;
-        $all_subscription_payment_id = Subscription::with(['subscription_payments'])->whereHas('subscription_payments', function ($query) use ($request) {
+        $all_subscription_payment_id = Subscription::with(['subscription_payments'])->whereHas('subscription_payments', function($query) use ($request) {
             $query->where('subscription_id', '=', $request->id);
         })->first();
 
         $subscription_start_date = chnageDateFormat($post_array['subscription_start_date']);
         $subscription_due_date = chnageDateFormat($post_array['subscription_due_date']);
-
+    
         if ($id == 0) {
             $subscription = new Subscription;
         } else if ($id > 0) {
@@ -76,16 +72,16 @@ class SubscriptionController extends Controller
         }
 
 
-        if ($subscription_start_date == $subscription->subscription_start_date) {
+        if($subscription_start_date == $subscription->subscription_start_date) {
             $sub_start_date = $subscription->subscription_start_date;
             $subscription_next_date = $subscription->subscription_next_date;
-        } else {
+        }else {
 
             $sub_start_date = $subscription_start_date;
             $current_date = Carbon::now()->format('Y-m-d');
-            if ($sub_start_date > $current_date) {
+            if($sub_start_date > $current_date) {
                 $subscription_next_date = $subscription_start_date;
-            } else {
+            }else {
                 $subscription_next_date = getSubscriptionNextDate($post_array['subscription_cycle'], $subscription_due_date);
             }
         }
@@ -95,10 +91,10 @@ class SubscriptionController extends Controller
         $subscription->subscription_cycle = $post_array['subscription_cycle'];
         $subscription->subscription_start_date = $sub_start_date;
         $subscription->subscription_next_date = $subscription_next_date;
-        if (isset($post_array['is_subscription_next_increment']) && $post_array['is_subscription_next_increment']) {
+        if(isset($post_array['is_subscription_next_increment']) && $post_array['is_subscription_next_increment']) {
             $subscription->is_subscription_next_increment = 1;
             $subscription->subscription_incremented_percentage = $post_array['subscription_incremented_percentage'];
-        } else {
+        }else {
             $subscription->is_subscription_next_increment = 0;
             $subscription->subscription_incremented_percentage = null;
         }
@@ -114,14 +110,14 @@ class SubscriptionController extends Controller
         $subscription->is_status = 1;
         $response = $subscription->save();
 
-        if (!empty($request->hidden_prod_id[0])) {
+        if(!empty($request->hidden_prod_id[0])) {
             $hidden_prod_id = $request->hidden_prod_id;
             $count = count($hidden_prod_id);
-            for ($i = 0; $i < $count; $i++) {
-                if (isset($request->subscription_payment_id[$i]) || !empty($request->subscription_payment_id[$i])) {
+            for ($i = 0; $i < $count; $i++) {     
+                if(isset($request->subscription_payment_id[$i]) || !empty($request->subscription_payment_id[$i])) {
                     $subscriptionPayment_id = $request->subscription_payment_id[$i];
                     $subscription_payment = SubscriptionPayment::find($subscriptionPayment_id);
-                } else {
+                }else {
                     $subscription_payment = new SubscriptionPayment();
                 }
                 $subscription_payment->subscription_id = $subscription->id;
@@ -144,6 +140,7 @@ class SubscriptionController extends Controller
                     }
                 }
             }
+
         }
         if (empty($action_id) && !empty($request->another_id[0])) {
             foreach ($all_subscription_payment_id->subscription_payments as $i_id) {
@@ -153,7 +150,7 @@ class SubscriptionController extends Controller
         }
 
         //Generate Invoice if subscription start date is == today's date
-        if ($subscription_start_date == date('Y-m-d')) {
+        if($subscription_start_date == date('Y-m-d')) {
             //Get Due Date
             $formatted_date = Carbon::create(date('Y-m-d'));
             $add_days = $formatted_date->addDays($subscription->subscription_payment_terms);
@@ -161,9 +158,9 @@ class SubscriptionController extends Controller
             //Get latest invioce number
             $latest_record = Invoice::latest()->first();
             $invoice_number = $latest_record->invoice_number;
-            $invoice_code = str_pad($invoice_number + 1, 6, '0', STR_PAD_LEFT);
+            $invoice_code = str_pad($invoice_number+1 ,6, '0', STR_PAD_LEFT);
             $invoice_setting = InvoiceSetting::first();
-
+            
             $invoice = new Invoice;
             $invoice->invoice_number = $invoice_code;
             $invoice->invoice_date = $subscription_start_date;
@@ -186,7 +183,7 @@ class SubscriptionController extends Controller
             $invoice->save();
 
             $subscription_payments = SubscriptionPayment::whereSubscriptionId($subscription->id)->get();
-            foreach ($subscription_payments as $subscription_payment) {
+            foreach($subscription_payments as $subscription_payment) {
                 $invoice_payment = new InvoicePayment();
                 $invoice_payment->invoice_id = $invoice->id;
                 $invoice_payment->product_id = $subscription_payment->product_id;
@@ -205,14 +202,14 @@ class SubscriptionController extends Controller
             $send_email = sendEmailOfGeneratedInvoice($invoice);
         }
 
-        if ($response) {
-            if ($id == 0) {
+        if($response) {
+            if($id == 0) {
                 $message = "Subscription added successfully.";
-            } else if ($id > 0) {
+            }else if ($id > 0) {
                 $message = "Subscription updated successfully.";
             }
             $message_class = "success";
-        } else {
+        }else {
             if ($id == 0) {
                 $message = "Error in adding Subscription. Please try again.";
             } else if ($id > 0) {
@@ -224,8 +221,7 @@ class SubscriptionController extends Controller
         return redirect()->route('subscriptions')->with($message_class, $message);
     }
 
-    public function deleteSubscription($id)
-    {
+    public function deleteSubscription($id) {
         $subscription = Subscription::find($id);
         $response = $subscription->delete();
         if ($response) {
@@ -238,8 +234,7 @@ class SubscriptionController extends Controller
         return response()->json($return);
     }
 
-    public function deleteSelectedSubscriptionRecords(Request $request)
-    {
+    public function deleteSelectedSubscriptionRecords(Request $request) {
         $post_array = $request->post();
         $response = Subscription::whereIn('id', $post_array['ids'])->delete();
         if ($response) {
@@ -254,130 +249,126 @@ class SubscriptionController extends Controller
         return response()->json($return);
     }
 
-    public function getProductDetails($id)
-    {
+    public function getProductDetails($id) {
         $product = Product::find($id);
         $response = [
             'success' => 1,
-            'product' => $product
+            'product' =>$product
         ];
-
+        
         return response()->json($response);
     }
 
-    public function getSubscriptionDueDate(Request $request)
-    {
+    public function getSubscriptionDueDate(Request $request) {
         $formatted_date = Carbon::create($request->subscription_date);
         $add_days = $formatted_date->addDays($request->payment_terms);
         $due_date = Carbon::createFromFormat('Y-m-d H:i:s', $add_days)->format('d-m-Y');
         $response = [
             'success' => 1,
-            'due_date' => $due_date
+            'due_date' =>$due_date
         ];
-
+        
         return response()->json($response);
     }
 
     //Subscription cron functions starts
-    // public function recurringSubscriptionCron() {
-    //     echo "in cron function".'<br>';
-    //     Log:info('Recurring Subscription Cron job started at: ' . Carbon::now());
-    //     $subscriptions = Subscription::with(['client','brand','subscription_payments.product'])->whereSubscriptionNextDate(Carbon::today())->get();
-    //     Log::info('Cron job executed. Subscriptions found: ' . $subscriptions->count());
-    //     foreach($subscriptions as $subscription) {
-    //         $current_date = date('Y-m-d');    
-    //         if($subscription->subscription_cycle == "daily") {
-    //             //Calculate start date of invoice
-    //             $next_date = Carbon::create($subscription->subscription_next_date);
-    //             $daily_date = $next_date->addDay();
-    //             $this->generateSubscriptionForCron($subscription, $current_date, $daily_date);
-
-    //         }else if($subscription->subscription_cycle == "weekly") {
-    //             //Calculate start date of invoice
-    //             $next_date = Carbon::create($subscription->subscription_next_date);
-    //             $weekly_date = $next_date->addWeek();
-    //             $this->generateSubscriptionForCron($subscription, $current_date, $weekly_date);
-
-    //         }else if($subscription->subscription_cycle == "monthly") {
-    //             //Calculate start date of invoice
-    //             $next_date = Carbon::create($subscription->subscription_next_date);
-    //             $monthly_date = $next_date->addMonth();
-    //             $this->generateSubscriptionForCron($subscription, $current_date, $monthly_date);
-
-    //         }else if($subscription->subscription_cycle == "quaterly") {
-    //             //Calculate start date of invoice
-    //             $next_date = Carbon::create($subscription->subscription_next_date);
-    //             $quaterly_date = $next_date->addMonths(3);
-    //             $this->generateSubscriptionForCron($subscription, $current_date, $quaterly_date);
-
-    //         }else if($subscription->subscription_cycle == "yearly") {
-    //             //Calculate start date of invoice
-    //             $next_date = Carbon::create($subscription->subscription_next_date);
-    //             $yearly_date = $next_date->addYear();
-    //             $this->generateSubscriptionForCron($subscription, $current_date, $yearly_date);
-
-    //         }else {
-    //             echo "<br> There is no invoice to generate";        
-    //         }
-    //     }
-    //     echo "<br> Invoice Generated Successfully";
-    // }
-
-    //Subscription cron functions starts
-    public function recurringSubscriptionCron()
-    {
-        echo "in cron function" . '<br>';
+    public function recurringSubscriptionCron() {
+        echo "in cron function".'<br>';
         Log::info('Recurring Subscription Cron job started at: ' . Carbon::now());
-        $subscriptions = Subscription::with(['client', 'brand', 'subscription_payments.product'])
-            ->whereDate('subscription_next_date', Carbon::today())
-            ->get();
-        Log::info('Cron job executed. Subscriptions found: ' . $subscriptions->count());
-        foreach ($subscriptions as $subscription) {
-            $current_date = date('Y-m-d');
-            $next_date = $this->getNextSubscriptionDateByCycle(
-                $subscription->subscription_cycle,
-                $subscription->subscription_next_date
-            );
+        $today = Carbon::today();
+        $subscriptions = Subscription::with(['client','brand','subscription_payments.product'])
+            ->get()
+            ->filter(function ($subscription) use ($today) {
+                return $this->isSubscriptionDueFromStartDate($subscription, $today);
+            })
+            ->values();
 
-            if ($next_date) {
+        Log::info('Cron job executed. Subscriptions found: ' . $subscriptions->count());
+        Log::info('Subscription IDs due for invoice generation: ' . $subscriptions->pluck('id')->implode(', '));
+
+        if ($subscriptions->count() == 0) {
+            echo "<br> There is no invoice to generate";
+            return;
+        }
+
+        $generated_subscription_ids = [];
+        foreach($subscriptions as $subscription) {
+            $current_date = date('Y-m-d');
+            $next_date = $this->getNextSubscriptionDateByCycle($subscription->subscription_cycle, $current_date);
+
+            if($next_date) {
                 $this->generateSubscriptionForCron($subscription, $current_date, $next_date);
-            } else {
+                $generated_subscription_ids[] = $subscription->id;
+            }else {
                 echo "<br> There is no invoice to generate";
             }
         }
+
+        Log::info('Subscription IDs generated by cron: ' . implode(', ', $generated_subscription_ids));
         echo "<br> Invoice Generated Successfully";
+    }
+
+    private function isSubscriptionDueFromStartDate($subscription, Carbon $today)
+    {
+        if (!$subscription->subscription_start_date) {
+            return false;
+        }
+
+        if (Invoice::whereSubscriptionId($subscription->id)->whereDate('invoice_date', $today)->exists()) {
+            return false;
+        }
+
+        $scheduled_date = Carbon::parse($subscription->subscription_start_date);
+        if ($scheduled_date->greaterThanOrEqualTo($today)) {
+            return false;
+        }
+
+        while ($scheduled_date->lessThan($today)) {
+            $next_scheduled_date = $this->getNextSubscriptionDateByCycle(
+                $subscription->subscription_cycle,
+                $scheduled_date->format('Y-m-d')
+            );
+
+            if (!$next_scheduled_date) {
+                return false;
+            }
+
+            $scheduled_date = Carbon::parse($next_scheduled_date);
+        }
+
+        return $scheduled_date->isSameDay($today);
     }
 
     private function getNextSubscriptionDateByCycle($subscription_cycle, $subscription_next_date)
     {
         $next_date = Carbon::create($subscription_next_date);
 
-        if ($subscription_cycle == "daily") {
+        if($subscription_cycle == "daily") {
             return $next_date->addDay()->format('Y-m-d');
-        } else if ($subscription_cycle == "weekly") {
+        }else if($subscription_cycle == "weekly") {
             return $next_date->addWeek()->format('Y-m-d');
-        } else if ($subscription_cycle == "monthly") {
+        }else if($subscription_cycle == "monthly") {
             return $next_date->addMonth()->format('Y-m-d');
-        } else if ($subscription_cycle == "quaterly") {
+        }else if($subscription_cycle == "quaterly") {
             return $next_date->addMonths(3)->format('Y-m-d');
-        } else if ($subscription_cycle == "yearly") {
+        }else if($subscription_cycle == "yearly") {
             return $next_date->addYear()->format('Y-m-d');
         }
 
         return null;
     }
-    public function generateSubscriptionForCron($subscription, $current_date, $next_date)
-    {
+
+    public function generateSubscriptionForCron($subscription, $current_date, $next_date) {        
         $count_generated_invoice = Invoice::whereSubscriptionId($subscription->id)->count();
         $payment_status_id = getPaymentStatusId();
-        if ($count_generated_invoice > 0) {
+        if($count_generated_invoice > 0) { 
             $parent_subscription_for_inc = Invoice::whereSubscriptionId($subscription->id)->latest()->first();
-            if ($subscription->is_subscription_next_increment == 1) {
-                $subscription_payments = SubscriptionPayment::whereSubscriptionId($parent_subscription_for_inc->subscription_id)->get();
-            } else {
+            if($subscription->is_subscription_next_increment == 1) {
+                $subscription_payments = SubscriptionPayment::whereSubscriptionId($parent_subscription_for_inc->subscription_id)->get(); 
+            }else{
                 $subscription_payments = SubscriptionPayment::whereSubscriptionId($subscription->id)->get();
             }
-        } else {
+        }else {
             $subscription_payments = SubscriptionPayment::whereSubscriptionId($subscription->id)->get();
         }
 
@@ -390,9 +381,9 @@ class SubscriptionController extends Controller
         $add_days = $formatted_date->addDays($subscription->subscription_payment_terms);
         $due_date = Carbon::createFromFormat('Y-m-d H:i:s', $add_days)->format('Y-m-d');
         $latest_record = Invoice::latest()->first();
-        if ($latest_record) {
+        if($latest_record) {
             $invoice_number = $latest_record->invoice_number;
-            $invoice_code = str_pad($invoice_number + 1, 6, '0', STR_PAD_LEFT);
+            $invoice_code = str_pad($invoice_number+1 ,6, '0', STR_PAD_LEFT);
         }
         $invoice_setting = InvoiceSetting::first();
 
@@ -413,11 +404,11 @@ class SubscriptionController extends Controller
         $new_invoice->is_status = 1;
         $new_invoice->created_at = Carbon::now();
         $new_invoice->save();
-
+    
         //Change the next date of subscription
         $subscription->subscription_next_date = $next_date;
-
-        foreach ($subscription_payments as $subscription_payment) {
+       
+        foreach($subscription_payments as $subscription_payment) {
             $new_invoice_payment = new InvoicePayment();
             $new_invoice_payment->invoice_id = $new_invoice->id;
             $new_invoice_payment->product_id = $subscription_payment->product_id;
@@ -425,27 +416,28 @@ class SubscriptionController extends Controller
             $new_invoice_payment->tax_selection = $subscription_payment->tax_selection;
             $new_invoice_payment->product_quantity = $subscription_payment->product_quantity;
 
-            if ($subscription->is_subscription_next_increment == 1) {
+            if($subscription->is_subscription_next_increment == 1) {
                 $increment = $subscription->subscription_incremented_percentage;
                 $tax_type = $subscription_payment->tax_selection;
                 $product_quantity = $subscription_payment->product_quantity;
                 $unit_price = ($subscription_payment->product_unit_price * $increment) / 100;
-                $increment_unit_price = $subscription_payment->product_unit_price + $unit_price;
-
+                $increment_unit_price = $subscription_payment->product_unit_price + $unit_price;                
+                
                 $return_values = $this->incrementedTaxCalculation($tax_type, $increment_unit_price, $product_quantity);
 
                 $new_invoice_payment->product_unit_price = $increment_unit_price;
                 $new_invoice_payment->product_subtotal = $return_values['final_item_total'];
                 $new_invoice_payment->product_gst = $return_values['in_ex_gst_amount'];
                 $new_invoice_payment->product_grand_total = $return_values['item_grand_total'];
-
+            
                 //Change the value of subscription payment while doing next increment
                 $subscription_payment->product_unit_price = $increment_unit_price;
                 $subscription_payment->product_subtotal = $return_values['final_item_total'];
                 $subscription_payment->product_gst = $return_values['in_ex_gst_amount'];
                 $subscription_payment->product_grand_total = $return_values['item_grand_total'];
                 $subscription_payment->save();
-            } else {
+
+            }else {
                 $new_invoice_payment->product_unit_price = $subscription_payment->product_unit_price;
                 $new_invoice_payment->product_subtotal = $subscription_payment->product_subtotal;
                 $new_invoice_payment->product_gst = $subscription_payment->product_gst;
@@ -466,7 +458,7 @@ class SubscriptionController extends Controller
         $new_invoice->save();
 
         //Save the subscription with updated values
-        if ($subscription->is_subscription_next_increment == 1) {
+        if($subscription->is_subscription_next_increment == 1) {
             $subscription->subscription_item_total = $total['final_item_total'];
             $subscription->subscription_grand_gst = $total['final_tax_amt'];
             // $subscription->subscription_grand_total = $total['grand_total'];
@@ -479,22 +471,21 @@ class SubscriptionController extends Controller
         $send_email = sendEmailOfGeneratedInvoice($new_invoice);
     }
 
-    public function incrementedTaxCalculation($tax_type, $increment_unit_price, $product_quantity)
-    {
+    public function incrementedTaxCalculation($tax_type, $increment_unit_price, $product_quantity) {
         $in_ex_gst_amount = 0;
-        $final_total_final = 0;
+        $final_total_final =0;
         $final_item_total = 0;
         $item_grand_total = 0;
-        if ($tax_type == 'GST Inclusive') {
+        if($tax_type == 'GST Inclusive') {
             $final_total = $increment_unit_price * $product_quantity;
             $final_total_final += $final_total;
             // $inclusive_tax =  $final_total*11/(100+11);
             $inclusive_tax =  $final_total / 11;
-            $inclusive_tax_amt = round($inclusive_tax, 2);
+            $inclusive_tax_amt = round($inclusive_tax ,2);
             $in_ex_gst_amount += $inclusive_tax_amt;
             $final_item_total += $final_total - $inclusive_tax_amt;
             $item_grand_total = $final_item_total + $in_ex_gst_amount;
-        } else if ($tax_type == 'GST') {
+        }else if($tax_type == 'GST'){   
             $ex_product_total = $increment_unit_price * $product_quantity;
             $final_item_total += $ex_product_total;
             $exclusiv_tax_amt = ($ex_product_total * 10) / 100;
@@ -502,7 +493,7 @@ class SubscriptionController extends Controller
             $in_ex_gst_amount += $exclusiv_tax_amt;
 
             $item_grand_total = $final_item_total + $in_ex_gst_amount;
-        } else if ($tax_type == 'No GST') {
+        }else if($tax_type == 'No GST') {
             $ng_item_total = $increment_unit_price * $product_quantity;
             $final_item_total += $ng_item_total;
             $in_ex_gst_amount = 0;
@@ -513,25 +504,24 @@ class SubscriptionController extends Controller
             'in_ex_gst_amount' => $in_ex_gst_amount,
             'item_grand_total' => $item_grand_total
         ];
-
-
+        
+        
         return $return;
     }
 
-    public function grandTotalAmount($clone_invoice_id)
-    {
+    public function grandTotalAmount($clone_invoice_id) {
         $invoice_payments = InvoicePayment::where('invoice_id', $clone_invoice_id)->get();
         $final_item_total = 0;
         $grand_total = 0;
         $final_tax_amt = 0;
-        foreach ($invoice_payments as $invoce_payment) {
+        foreach($invoice_payments as $invoce_payment) {
             $subtotal = $invoce_payment->product_subtotal;
             $product_gst = $invoce_payment->product_gst;
             $each_row_total = $subtotal ? $subtotal : 0;
             $each_row_tax = $product_gst ? $product_gst : 0;
             $final_item_total += $each_row_total;
             $final_tax_amt += $each_row_tax;
-            $grand_total = $final_item_total + $final_tax_amt;
+            $grand_total = $final_item_total + $final_tax_amt;    
         }
         $return = [
             'final_item_total' => round($final_item_total, 2),
@@ -574,11 +564,10 @@ class SubscriptionController extends Controller
     // }
 
     //old cron 1jun 2026 HP
-    public function changeSubscriptionDueDate()
-    {
+    public function changeSubscriptionDueDate() {
         $prev_month_year = date('Y-m', strtotime("-1 month"));
         // $prev_month_year = '2022-08';
-        $prev_start_date = $prev_month_year . '-' . '01';
+        $prev_start_date = $prev_month_year.'-'.'01';
         $prev_end_date = date("Y-m-t", strtotime($prev_start_date));
 
         try {
@@ -595,14 +584,14 @@ class SubscriptionController extends Controller
             }
 
             return "Subscription due date is updated successfully.";
-        } catch (Exception $e) {
+        }catch(Exception $e) {
             return "Error in updating subscription due date.";
         }
+
     }
     //Subscription cron functions ends
 
-    public function exportSubscriptions()
-    {
+    public function exportSubscriptions() {
         return Excel::download(new SubscriptionExport, 'subscriptions.xlsx');
     }
 }

@@ -1,4 +1,26 @@
 $(document).ready(function () {
+    if ($.fn.select2) {
+        $('.expense-key-select').select2({
+            width: '100%',
+            minimumResultsForSearch: 0,
+            dropdownParent: $('#add_expected_expense')
+        });
+
+        $('.edit-expense-key-select').select2({
+            width: '100%',
+            minimumResultsForSearch: 0,
+            dropdownParent: $('#edit_expense_key')
+        });
+
+        $(document).on('select2:open', function () {
+            setTimeout(function () {
+                var searchField = document.querySelector('.select2-container--open .select2-search__field');
+                if (searchField) {
+                    searchField.focus();
+                }
+            }, 0);
+        });
+    }
 
     // ── DataTable (blank column removed — was causing the warning) ────
     if ($('#expenseDataTable').length > 0) {

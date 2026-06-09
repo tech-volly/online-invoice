@@ -104,7 +104,7 @@
                     </div>
                     <div class="form-group">
                         <label>Expense Category <span class="text-danger">*</span></label>
-                        <select class="select" name="category_id" id="category_id">
+                        <select class="form-control expense-key-select" name="category_id" id="category_id">
                             <option value="">Select Category</option>
                             @foreach($categories as $category)
                                 <option value="{{ $category->id }}">{{ $category->name }}</option>
@@ -113,7 +113,7 @@
                     </div>
                     <div class="form-group">
                         <label>Supplier</label>
-                        <select class="select" name="supplier_id" id="supplier_id">
+                        <select class="form-control expense-key-select" name="supplier_id" id="supplier_id">
                             <option value="">Select Supplier</option>
                             @foreach($suppliers as $supplier)
                                 <option value="{{ $supplier->id }}">{{ $supplier->supplier_business_name }}</option>
@@ -153,7 +153,7 @@
                     </div>
                     <div class="form-group">
                         <label>Expense Category <span class="text-danger">*</span></label>
-                        <select class="select" name="category_id" id="edit_category_id">
+                        <select class="form-control edit-expense-key-select" name="category_id" id="edit_category_id">
                             <option value="">Select Category</option>
                             @foreach($categories as $category)
                                 <option value="{{ $category->id }}">{{ $category->name }}</option>
@@ -162,7 +162,7 @@
                     </div>
                     <div class="form-group">
                         <label>Supplier</label>
-                        <select class="select" name="supplier_id" id="edit_supplier_id">
+                        <select class="form-control edit-expense-key-select" name="supplier_id" id="edit_supplier_id">
                             <option value="">Select Supplier</option>
                             @foreach($suppliers as $supplier)
                                 <option value="{{ $supplier->id }}">{{ $supplier->supplier_business_name }}</option>

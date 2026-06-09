@@ -37,9 +37,9 @@ class ImportExpenseFromKeyController extends Controller
             });
 
         // Dropdowns for the review table
-        $suppliers       = Supplier::whereNull('deleted_at')->orderBy('supplier_business_name')->get();
-        $categories      = ExpenseCategory::whereNull('deleted_at')->orderBy('name')->get();
-        $payment_methods = PaymentMethod::orderBy('payment_method_name')->whereIsStatus(1)->get();
+        $suppliers       = Supplier::whereNull('deleted_at')->orderBy('supplier_business_name', 'asc')->get();
+        $categories      = ExpenseCategory::whereNull('deleted_at')->orderBy('name', 'asc')->get();
+        $payment_methods = PaymentMethod::orderBy('payment_method_name', 'asc')->whereIsStatus(1)->get();
 
         // Match each CSV row description against expense keys
         foreach ($rows as &$row) {
@@ -116,19 +116,20 @@ class ImportExpenseFromKeyController extends Controller
 
             try {
                 $amount = (float) ($row['amount'] ?? 0);
+                $expenseAmount = abs($amount);
                 $date   = $this->parseDate($row['date'] ?? '');
                 $supplierId = !empty($row['supplier_id']) ? $row['supplier_id'] : null;
                 $supplierBusinessName = $this->supplierBusinessName($supplierId);
                 $createdKeys += $this->createExpenseKeyFromUnmatchedRow($row, $supplierId);
 
-                if ($this->isDuplicateExpense($supplierBusinessName, $date, $seenImportRows)) {
+                if ($this->isDuplicateExpense($supplierBusinessName, $date, $expenseAmount, $seenImportRows)) {
                     $duplicateRows[] = $i + 1;
                     $skipped++;
                     continue;
                 }
 
                 if ($supplierBusinessName && $date) {
-                    $seenImportRows[] = $this->duplicateKey($supplierBusinessName, $date);
+                    $seenImportRows[] = $this->duplicateKey($supplierBusinessName, $date, $expenseAmount);
                 }
 
                 // Use new Expense() + individual assignment + save()
@@ -140,7 +141,7 @@ class ImportExpenseFromKeyController extends Controller
                 $expense->supplier_id               = $supplierId;
                 $expense->supplier_expense_category = $row['category_id'];
                 $expense->expense_tax               = $row['tax'] ?? 'GST Inclusive';
-                $expense->expense_amount            = abs($amount);
+                $expense->expense_amount            = $expenseAmount;
                 $expense->expense_date              = $date;
                 $expense->expense_description       = $row['description'] ?? null;
                 $expense->is_status                 = 1;
@@ -292,26 +293,27 @@ class ImportExpenseFromKeyController extends Controller
         return $supplier ? $supplier->supplier_business_name : null;
     }
 
-    private function isDuplicateExpense(?string $supplierBusinessName, ?string $date, array $seenImportRows): bool
+    private function isDuplicateExpense(?string $supplierBusinessName, ?string $date, float $amount, array $seenImportRows): bool
     {
         if (!$supplierBusinessName || !$date) {
             return false;
         }
 
-        $duplicateKey = $this->duplicateKey($supplierBusinessName, $date);
+        $duplicateKey = $this->duplicateKey($supplierBusinessName, $date, $amount);
         if (in_array($duplicateKey, $seenImportRows)) {
             return true;
         }
 
         return Expense::where('expense_date', $date)
+            ->where('expense_amount', $amount)
             ->whereHas('supplier', function ($query) use ($supplierBusinessName) {
                 $query->where('supplier_business_name', $supplierBusinessName);
             })
             ->exists();
     }
 
-    private function duplicateKey(string $supplierBusinessName, string $date): string
+    private function duplicateKey(string $supplierBusinessName, string $date, float $amount): string
     {
-        return $this->normalizeMatchText($supplierBusinessName) . '|' . $date;
+        return $this->normalizeMatchText($supplierBusinessName) . '|' . $date . '|' . number_format($amount, 2, '.', '');
     }
 }

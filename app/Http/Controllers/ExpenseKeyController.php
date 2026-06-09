@@ -15,8 +15,8 @@ class ExpenseKeyController extends Controller
     public function index()
     {
         $keys       = ExpenseKey::latest()->get();
-        $categories = ExpenseCategory::whereNull('deleted_at')->orderBy('name')->get();
-        $suppliers  = Supplier::whereNull('deleted_at')->get();
+        $categories = ExpenseCategory::whereNull('deleted_at')->orderBy('name', 'asc')->get();
+        $suppliers  = Supplier::whereNull('deleted_at')->orderBy('supplier_business_name', 'asc')->get();
 
         return view('expense_keys.index', compact('keys', 'categories', 'suppliers'));
     }

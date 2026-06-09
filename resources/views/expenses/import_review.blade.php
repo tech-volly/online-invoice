@@ -214,6 +214,7 @@
                                     {{ $row['description'] }}
                                 </div>
                                 <input type="hidden" name="rows[{{ $i }}][description]" value="{{ $row['description'] }}">
+                                <input type="hidden" name="rows[{{ $i }}][matched_key]" value="{{ $row['matched_key'] ?? '' }}">
                             </td>
 
                             {{-- Amount --}}

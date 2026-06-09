@@ -93,6 +93,7 @@ class ImportExpenseFromKeyController extends Controller
         $skipped = 0;
         $duplicateRows = [];
         $seenImportRows = [];
+        $createdKeys = 0;
         $rowErrors = [];
 
         foreach ($rows as $i => $row) {
@@ -118,6 +119,7 @@ class ImportExpenseFromKeyController extends Controller
                 $date   = $this->parseDate($row['date'] ?? '');
                 $supplierId = !empty($row['supplier_id']) ? $row['supplier_id'] : null;
                 $supplierBusinessName = $this->supplierBusinessName($supplierId);
+                $createdKeys += $this->createExpenseKeyFromUnmatchedRow($row, $supplierId);
 
                 if ($this->isDuplicateExpense($supplierBusinessName, $date, $seenImportRows)) {
                     $duplicateRows[] = $i + 1;
@@ -161,6 +163,7 @@ class ImportExpenseFromKeyController extends Controller
         $message = "{$saved} expense(s) imported successfully.";
         if ($skipped)           $message .= " {$skipped} skipped.";
         if (!empty($duplicateRows)) $message .= " Duplicate entry found in row " . implode(', ', $duplicateRows) . ".";
+        if ($createdKeys)       $message .= " {$createdKeys} new expense key(s) added.";
         if (!empty($rowErrors)) $message .= " " . count($rowErrors) . " row(s) had errors.";
 
         $messageClass = !empty($duplicateRows) ? 'danger' : 'success';
@@ -245,6 +248,37 @@ class ImportExpenseFromKeyController extends Controller
         $pattern = '/(?<![a-z0-9])' . preg_quote($keyword, '/') . '(?![a-z0-9])/i';
 
         return preg_match($pattern, $description) === 1;
+    }
+
+    private function createExpenseKeyFromUnmatchedRow(array $row, ?int $supplierId): int
+    {
+        if (!empty($row['matched_key']) || empty($row['description']) || empty($row['category_id'])) {
+            return 0;
+        }
+
+        $key = substr(trim($row['description']), 0, 255);
+        if ($key === '' || $this->expenseKeyExists($key)) {
+            return 0;
+        }
+
+        ExpenseKey::create([
+            'key' => $key,
+            'category_id' => $row['category_id'],
+            'supplier_id' => $supplierId,
+        ]);
+
+        return 1;
+    }
+
+    private function expenseKeyExists(string $key): bool
+    {
+        $normalizedKey = $this->normalizeMatchText($key);
+
+        return ExpenseKey::whereNotNull('key')
+            ->get()
+            ->contains(function ($expenseKey) use ($normalizedKey) {
+                return $this->normalizeMatchText($expenseKey->key) === $normalizedKey;
+            });
     }
 
     private function supplierBusinessName(?int $supplierId): ?string

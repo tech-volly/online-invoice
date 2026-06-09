@@ -46,7 +46,8 @@
     text-decoration: line-through;
 }
 .row-skipped td input,
-.row-skipped td select {
+.row-skipped td select,
+.row-skipped td .select2-container {
     pointer-events: none;
 }
 .amount-negative { color: #dc3545; font-weight: 600; }
@@ -65,6 +66,27 @@
     border-radius: 6px;
     padding: 10px 16px;
     margin-bottom: 12px;
+}
+.review-table .select2-container,
+.bulk-bar .select2-container {
+    min-width: 100%;
+}
+.review-table .select2-container--default .select2-selection--single,
+.bulk-bar .select2-container--default .select2-selection--single {
+    height: 32px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+}
+.review-table .select2-container--default .select2-selection--single .select2-selection__rendered,
+.bulk-bar .select2-container--default .select2-selection--single .select2-selection__rendered {
+    line-height: 30px;
+    padding-left: 8px;
+    padding-right: 26px;
+}
+.review-table .select2-container--default .select2-selection--single .select2-selection__arrow,
+.bulk-bar .select2-container--default .select2-selection--single .select2-selection__arrow {
+    height: 30px;
+    right: 4px;
 }
 </style>
 @endsection
@@ -115,7 +137,7 @@
 
             {{-- Bulk payment method --}}
             <div class="col-auto">
-                <select class="form-control form-control-sm" id="bulkPaymentMethod" style="min-width:170px;">
+                <select class="form-control form-control-sm searchable-select" id="bulkPaymentMethod" style="min-width:170px;">
                     <option value="">— Payment Method for All —</option>
                     @foreach($payment_methods as $pm)
                         <option value="{{ $pm->id }}">{{ $pm->payment_method_name }}</option>
@@ -205,7 +227,7 @@
 
                             {{-- Supplier dropdown --}}
                             <td>
-                                <select class="form-control supplier-select" name="rows[{{ $i }}][supplier_id]" style="min-width:148px;">
+                                <select class="form-control supplier-select searchable-select" name="rows[{{ $i }}][supplier_id]" style="min-width:148px;">
                                     <option value="">-- Select --</option>
                                     @foreach($suppliers as $s)
                                         <option value="{{ $s->id }}"
@@ -218,7 +240,7 @@
 
                             {{-- Category dropdown --}}
                             <td>
-                                <select class="form-control category-select" name="rows[{{ $i }}][category_id]" style="min-width:148px;">
+                                <select class="form-control category-select searchable-select" name="rows[{{ $i }}][category_id]" style="min-width:148px;">
                                     <option value="">-- Select --</option>
                                     @foreach($categories as $c)
                                         <option value="{{ $c->id }}"
@@ -231,7 +253,7 @@
 
                             {{-- Payment Method dropdown (per row) --}}
                             <td>
-                                <select class="form-control payment-method-select" name="rows[{{ $i }}][payment_method_id]" style="min-width:148px;">
+                                <select class="form-control payment-method-select searchable-select" name="rows[{{ $i }}][payment_method_id]" style="min-width:148px;">
                                     <option value="">-- Select --</option>
                                     @foreach($payment_methods as $pm)
                                         <option value="{{ $pm->id }}">
@@ -243,7 +265,7 @@
 
                             {{-- Tax dropdown --}}
                             <td>
-                                <select class="form-control" name="rows[{{ $i }}][tax]" style="min-width:98px;">
+                                <select class="form-control searchable-select" name="rows[{{ $i }}][tax]" style="min-width:98px;">
                                     <option value="GST Inclusive" {{ ($defaults['tax'] ?? 'GST Inclusive') === 'GST Inclusive' ? 'selected' : '' }}>GST Inclusive</option>
                                     <option value="No GST"        {{ ($defaults['tax'] ?? '') === 'No GST' ? 'selected' : '' }}>No GST</option>
                                 </select>
@@ -306,6 +328,19 @@
 @section('script')
 <script>
 $(document).ready(function () {
+    $('.searchable-select').select2({
+        width: '100%',
+        minimumResultsForSearch: 0
+    });
+
+    $(document).on('select2:open', function () {
+        setTimeout(function () {
+            const searchField = document.querySelector('.select2-container--open .select2-search__field');
+            if (searchField) {
+                searchField.focus();
+            }
+        }, 0);
+    });
 
     // Auto-skip negative rows
     $('.review-row').each(function () {

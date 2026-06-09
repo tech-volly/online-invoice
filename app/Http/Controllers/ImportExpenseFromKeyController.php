@@ -30,8 +30,11 @@ class ImportExpenseFromKeyController extends Controller
                 ->with('error', 'CSV file is empty or has no valid rows.');
         }
 
-        // Load all expense keys for matching
-        $expenseKeys = ExpenseKey::whereNotNull('key')->get();
+        // Load all expense keys for matching. Longer keys should win before short keys.
+        $expenseKeys = ExpenseKey::whereNotNull('key')->get()
+            ->sortByDesc(function ($expenseKey) {
+                return strlen($this->normalizeMatchText($expenseKey->key));
+            });
 
         // Dropdowns for the review table
         $suppliers       = Supplier::whereNull('deleted_at')->orderBy('supplier_business_name')->get();
@@ -50,7 +53,7 @@ class ImportExpenseFromKeyController extends Controller
                 $keyword = $this->normalizeMatchText($ek->key);
                 if (empty($keyword)) continue;
 
-                if (str_contains($description, $keyword)) {
+                if ($this->matchesExpenseKey($description, $keyword)) {
                     $row['matched_key']         = $ek->key;
                     $row['matched_category_id'] = $ek->category_id;
                     $row['matched_supplier_id'] = $ek->supplier_id;
@@ -88,6 +91,8 @@ class ImportExpenseFromKeyController extends Controller
 
         $saved   = 0;
         $skipped = 0;
+        $duplicateRows = [];
+        $seenImportRows = [];
         $rowErrors = [];
 
         foreach ($rows as $i => $row) {
@@ -111,6 +116,18 @@ class ImportExpenseFromKeyController extends Controller
             try {
                 $amount = (float) ($row['amount'] ?? 0);
                 $date   = $this->parseDate($row['date'] ?? '');
+                $supplierId = !empty($row['supplier_id']) ? $row['supplier_id'] : null;
+                $supplierBusinessName = $this->supplierBusinessName($supplierId);
+
+                if ($this->isDuplicateExpense($supplierBusinessName, $date, $seenImportRows)) {
+                    $duplicateRows[] = $i + 1;
+                    $skipped++;
+                    continue;
+                }
+
+                if ($supplierBusinessName && $date) {
+                    $seenImportRows[] = $this->duplicateKey($supplierBusinessName, $date);
+                }
 
                 // Use new Expense() + individual assignment + save()
                 // This is identical to how ExpenseController::addExpenseAction works
@@ -118,7 +135,7 @@ class ImportExpenseFromKeyController extends Controller
                 $expense = new Expense();
                 $expense->supplier_invoice_number   = substr($row['description'] ?? '', 0, 100);
                 $expense->payment_method_id         = $row['payment_method_id'];
-                $expense->supplier_id               = !empty($row['supplier_id']) ? $row['supplier_id'] : null;
+                $expense->supplier_id               = $supplierId;
                 $expense->supplier_expense_category = $row['category_id'];
                 $expense->expense_tax               = $row['tax'] ?? 'GST Inclusive';
                 $expense->expense_amount            = abs($amount);
@@ -143,9 +160,12 @@ class ImportExpenseFromKeyController extends Controller
 
         $message = "{$saved} expense(s) imported successfully.";
         if ($skipped)           $message .= " {$skipped} skipped.";
+        if (!empty($duplicateRows)) $message .= " Duplicate entry found in row " . implode(', ', $duplicateRows) . ".";
         if (!empty($rowErrors)) $message .= " " . count($rowErrors) . " row(s) had errors.";
 
-        return redirect()->route('expenses')->with('success', $message);
+        $messageClass = !empty($duplicateRows) ? 'danger' : 'success';
+
+        return redirect()->route('expenses')->with($messageClass, $message);
     }
 
     // ──────────────────────────────────────────────
@@ -214,5 +234,50 @@ class ImportExpenseFromKeyController extends Controller
     private function normalizeMatchText(string $value): string
     {
         return strtolower(trim(preg_replace('/\s+/', ' ', $value)));
+    }
+
+    private function matchesExpenseKey(string $description, string $keyword): bool
+    {
+        if ($keyword === '') {
+            return false;
+        }
+
+        $pattern = '/(?<![a-z0-9])' . preg_quote($keyword, '/') . '(?![a-z0-9])/i';
+
+        return preg_match($pattern, $description) === 1;
+    }
+
+    private function supplierBusinessName(?int $supplierId): ?string
+    {
+        if (!$supplierId) {
+            return null;
+        }
+
+        $supplier = Supplier::find($supplierId);
+
+        return $supplier ? $supplier->supplier_business_name : null;
+    }
+
+    private function isDuplicateExpense(?string $supplierBusinessName, ?string $date, array $seenImportRows): bool
+    {
+        if (!$supplierBusinessName || !$date) {
+            return false;
+        }
+
+        $duplicateKey = $this->duplicateKey($supplierBusinessName, $date);
+        if (in_array($duplicateKey, $seenImportRows)) {
+            return true;
+        }
+
+        return Expense::where('expense_date', $date)
+            ->whereHas('supplier', function ($query) use ($supplierBusinessName) {
+                $query->where('supplier_business_name', $supplierBusinessName);
+            })
+            ->exists();
+    }
+
+    private function duplicateKey(string $supplierBusinessName, string $date): string
+    {
+        return $this->normalizeMatchText($supplierBusinessName) . '|' . $date;
     }
 }

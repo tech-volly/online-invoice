@@ -226,21 +226,62 @@ class ClientController extends Controller
         $rows_data = $import->data->toArray();
 
         foreach($rows_data as $key => $data) {
-            if($data['tags'] != '') {
-                $client_tags = $data['tags'];
-            }else {
-                $client_tags = NULL;
+            $update_data = [];
+
+            if($this->importRowHasKey($data, ['tags', 'client_tags'])) {
+                $client_tags = $this->importRowValue($data, ['tags', 'client_tags']);
+                if($client_tags == '') {
+                    $client_tags = NULL;
+                }
+
+                $update_data['client_tags'] = $client_tags;
             }
-            $client = Client::where([
-                'client_business_name' => $data['clientbusinessname'],
-                'client_first_name' => $data['firstname'],
-                'client_last_name' => $data['lastname'],
-            ])->update([
-                'client_tags' => $client_tags
-            ]);
+
+            if($this->importRowHasKey($data, ['quote_email', 'quotes_email', 'client_quotes_email'])) {
+                $update_data['client_quotes_email'] = $this->importRowValue($data, ['quote_email', 'quotes_email', 'client_quotes_email']);
+            }
+
+            if($this->importRowHasKey($data, ['statement_email', 'client_statement_email'])) {
+                $update_data['client_statement_email'] = $this->importRowValue($data, ['statement_email', 'client_statement_email']);
+            }
+
+            if($this->importRowHasKey($data, ['reminder_days', 'reminder_day'])) {
+                $reminder_day = $this->importRowValue($data, ['reminder_days', 'reminder_day']);
+                $update_data['reminder_day'] = $reminder_day ?: 15;
+            }
+
+            if(!empty($update_data)) {
+                Client::where([
+                    'client_business_name' => $this->importRowValue($data, ['clientbusinessname', 'client_business_name']),
+                    'client_first_name' => $this->importRowValue($data, ['firstname', 'client_first_name']),
+                    'client_last_name' => $this->importRowValue($data, ['lastname', 'client_last_name']),
+                ])->update($update_data);
+            }
 
         }
     
         return redirect()->route('clients')->with('success','Clients are imported successfully');
+    }
+
+    private function importRowValue(array $row, array $keys)
+    {
+        foreach ($keys as $key) {
+            if (isset($row[$key]) && $row[$key] !== '') {
+                return $row[$key];
+            }
+        }
+
+        return null;
+    }
+
+    private function importRowHasKey(array $row, array $keys)
+    {
+        foreach ($keys as $key) {
+            if (array_key_exists($key, $row)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

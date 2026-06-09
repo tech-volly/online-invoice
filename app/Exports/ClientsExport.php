@@ -22,7 +22,7 @@ class ClientsExport implements FromCollection, WithHeadings, ShouldAutoSize, Wit
     
     public function collection() {
         $clients = Client::select('client_number', 'client_business_name', 'client_first_name', 'client_last_name', 'client_mobile',
-            'client_email as accounts_email', 'client_street_address_1', 'client_city', 'client_state', 'client_postalcode', 'client_country', 'shipping_street_address_1', 
+            'client_email as accounts_email', 'client_quotes_email', 'client_statement_email', 'reminder_day', 'client_street_address_1', 'client_city', 'client_state', 'client_postalcode', 'client_country', 'shipping_street_address_1', 
             'shipping_city', 'shipping_state', 'shipping_postalcode', 'shipping_country', 'client_invoicing_method', 'client_currency',
             'client_notes'
         )->get();
@@ -35,6 +35,9 @@ class ClientsExport implements FromCollection, WithHeadings, ShouldAutoSize, Wit
             $data[$d]['client_last_name'] = $val->client_last_name;
             $data[$d]['client_mobile'] = $val->client_mobile;
             $data[$d]['accounts_email'] = $val->accounts_email;
+            $data[$d]['client_quotes_email'] = $val->client_quotes_email;
+            $data[$d]['client_statement_email'] = $val->client_statement_email;
+            $data[$d]['reminder_day'] = $val->reminder_day ?? 15;
             $data[$d]['client_street_address_1'] = $val->client_street_address_1;
             $data[$d]['client_city'] = $val->client_city;
             $data[$d]['client_state'] = $val->client_state;
@@ -64,6 +67,9 @@ class ClientsExport implements FromCollection, WithHeadings, ShouldAutoSize, Wit
             'Client Last Name',
             'Client Mobile',
             'Accounts Email',
+            'Quote Email',
+            'Statement Email',
+            'Reminder Days',
             'Client Street Address 1',
             'Client City',
             'Client State',
@@ -81,13 +87,13 @@ class ClientsExport implements FromCollection, WithHeadings, ShouldAutoSize, Wit
     }
 
     public function styles(Worksheet $sheet) {
-        $sheet->getStyle('A1:S1')->getFont()->setBold(true);
+        $sheet->getStyle('A1:V1')->getFont()->setBold(true);
     }
 
     public function registerEvents(): array {
         return [
             AfterSheet::class => function(AfterSheet $event) {
-                $event->sheet->getDelegate()->getStyle('A1:S1')
+                $event->sheet->getDelegate()->getStyle('A1:V1')
                     ->getFill()
                     ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
                     ->getStartColor()

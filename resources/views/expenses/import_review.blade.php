@@ -22,9 +22,6 @@
     color: #fff;
     font-size: 12px;
     white-space: nowrap;
-    position: sticky;
-    top: 0;
-    z-index: 5;
 }
 .review-table td {
     font-size: 13px;
@@ -53,11 +50,8 @@
 .amount-negative { color: #dc3545; font-weight: 600; }
 .amount-positive { color: #198754; font-weight: 600; }
 .sticky-summary {
-    position: sticky;
-    bottom: 0;
     background: #fff;
     border-top: 2px solid #3d5a99;
-    z-index: 10;
     padding: 12px 20px;
 }
 .bulk-bar {
@@ -169,7 +163,7 @@
     {{-- Review table --}}
     <div class="row">
         <div class="col-md-12">
-            <div class="table-responsive" style="max-height:600px; overflow-y:auto;">
+            <div class="table-responsive">
                 <table class="table table-striped table-bordered review-table" id="reviewTable">
                     <thead>
                         <tr>

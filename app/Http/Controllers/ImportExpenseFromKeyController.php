@@ -96,10 +96,18 @@ class ImportExpenseFromKeyController extends Controller
         $createdKeys = 0;
         $rowErrors = [];
 
+        Log::info('ImportExpenseFromKey save started.', [
+            'total_rows' => count($rows),
+        ]);
+
         foreach ($rows as $i => $row) {
 
             // Row was manually skipped by user
             if (!empty($row['skip']) && $row['skip'] == 1) {
+                Log::info('ImportExpenseFromKey row skipped by user.', [
+                    'row' => $i + 1,
+                    'description' => $row['description'] ?? null,
+                ]);
                 $skipped++;
                 continue;
             }
@@ -118,35 +126,54 @@ class ImportExpenseFromKeyController extends Controller
                 $amount = (float) ($row['amount'] ?? 0);
                 $expenseAmount = abs($amount);
                 $date   = $this->parseDate($row['date'] ?? '');
+                $description = $this->cleanDescriptionSpacing($row['description'] ?? '');
                 $supplierId = !empty($row['supplier_id']) ? $row['supplier_id'] : null;
-                $supplierBusinessName = $this->supplierBusinessName($supplierId);
-                $createdKeys += $this->createExpenseKeyFromUnmatchedRow($row, $supplierId);
+                $duplicateKey = $date ? $this->duplicateKey($description, $date, $expenseAmount) : null;
 
-                if ($this->isDuplicateExpense($supplierBusinessName, $date, $expenseAmount, $seenImportRows)) {
+                Log::info('ImportExpenseFromKey row duplicate check.', [
+                    'row' => $i + 1,
+                    'supplier_id' => $supplierId,
+                    'date' => $date,
+                    'amount' => $expenseAmount,
+                    'raw_description' => $row['description'] ?? null,
+                    'normalized_description' => $description,
+                    'duplicate_key' => $duplicateKey,
+                ]);
+
+                if ($this->isDuplicateExpense($supplierId, $date, $expenseAmount, $seenImportRows, $description, $i + 1)) {
                     $duplicateRows[] = $i + 1;
                     $skipped++;
                     continue;
                 }
 
-                if ($supplierBusinessName && $date) {
-                    $seenImportRows[] = $this->duplicateKey($supplierBusinessName, $date, $expenseAmount);
+                if ($date) {
+                    $seenImportRows[] = $this->duplicateKey($description, $date, $expenseAmount);
                 }
+                $createdKeys += $this->createExpenseKeyFromUnmatchedRow($row, $supplierId);
 
                 // Use new Expense() + individual assignment + save()
                 // This is identical to how ExpenseController::addExpenseAction works
                 // and avoids any $fillable issues entirely.
                 $expense = new Expense();
-                $expense->supplier_invoice_number   = substr($row['description'] ?? '', 0, 100);
+                $expense->supplier_invoice_number   = substr($description, 0, 100);
                 $expense->payment_method_id         = $row['payment_method_id'];
                 $expense->supplier_id               = $supplierId;
                 $expense->supplier_expense_category = $row['category_id'];
                 $expense->expense_tax               = $row['tax'] ?? 'GST Inclusive';
                 $expense->expense_amount            = $expenseAmount;
                 $expense->expense_date              = $date;
-                $expense->expense_description       = $row['description'] ?? null;
+                $expense->expense_description       = $description ?: null;
                 $expense->is_status                 = 1;
 
                 $expense->save();
+                Log::info('ImportExpenseFromKey row saved.', [
+                    'row' => $i + 1,
+                    'expense_id' => $expense->id,
+                    'supplier_id' => $supplierId,
+                    'date' => $date,
+                    'amount' => $expenseAmount,
+                    'description' => $description,
+                ]);
                 $saved++;
 
             } catch (\Exception $e) {
@@ -168,6 +195,14 @@ class ImportExpenseFromKeyController extends Controller
         if (!empty($rowErrors)) $message .= " " . count($rowErrors) . " row(s) had errors.";
 
         $messageClass = !empty($duplicateRows) ? 'danger' : 'success';
+
+        Log::info('ImportExpenseFromKey save completed.', [
+            'saved' => $saved,
+            'skipped' => $skipped,
+            'duplicate_rows' => $duplicateRows,
+            'created_keys' => $createdKeys,
+            'row_errors' => $rowErrors,
+        ]);
 
         return redirect()->route('expenses')->with($messageClass, $message);
     }
@@ -205,7 +240,7 @@ class ImportExpenseFromKeyController extends Controller
                 continue;
             }
 
-            $description = trim($line[$map['description']] ?? '');
+            $description = $this->cleanDescriptionSpacing($line[$map['description']] ?? '');
             $date        = trim($line[$map['date']] ?? '');
             $amount      = (float) str_replace([',', '$', '"'], '', trim($line[$map['amount']] ?? '0'));
 
@@ -237,7 +272,14 @@ class ImportExpenseFromKeyController extends Controller
 
     private function normalizeMatchText(string $value): string
     {
-        return strtolower(trim(preg_replace('/\s+/', ' ', $value)));
+        return strtolower($this->cleanDescriptionSpacing($value));
+    }
+
+    private function cleanDescriptionSpacing(string $value): string
+    {
+        $value = str_replace(["\xc2\xa0", "\xe2\x80\xaf"], ' ', $value);
+
+        return trim(preg_replace('/\s+/u', ' ', $value));
     }
 
     private function matchesExpenseKey(string $description, string $keyword): bool
@@ -257,7 +299,7 @@ class ImportExpenseFromKeyController extends Controller
             return 0;
         }
 
-        $key = substr(trim($row['description']), 0, 255);
+        $key = substr($this->cleanDescriptionSpacing($row['description']), 0, 255);
         if ($key === '' || $this->expenseKeyExists($key)) {
             return 0;
         }
@@ -282,38 +324,71 @@ class ImportExpenseFromKeyController extends Controller
             });
     }
 
-    private function supplierBusinessName(?int $supplierId): ?string
+    private function isDuplicateExpense(?int $supplierId, ?string $date, float $amount, array $seenImportRows, string $description = '', ?int $rowNumber = null): bool
     {
-        if (!$supplierId) {
-            return null;
-        }
-
-        $supplier = Supplier::find($supplierId);
-
-        return $supplier ? $supplier->supplier_business_name : null;
-    }
-
-    private function isDuplicateExpense(?string $supplierBusinessName, ?string $date, float $amount, array $seenImportRows): bool
-    {
-        if (!$supplierBusinessName || !$date) {
+        if (!$date) {
+            Log::info('ImportExpenseFromKey duplicate check skipped because date is empty.', [
+                'row' => $rowNumber,
+            ]);
             return false;
         }
 
-        $duplicateKey = $this->duplicateKey($supplierBusinessName, $date, $amount);
+        if (!$description && !$supplierId) {
+            Log::info('ImportExpenseFromKey duplicate check skipped because supplier and description are empty.', [
+                'row' => $rowNumber,
+            ]);
+            return false;
+        }
+
+        $duplicateKey = $this->duplicateKey($description ?: $supplierId, $date, $amount);
         if (in_array($duplicateKey, $seenImportRows)) {
+            Log::info('ImportExpenseFromKey duplicate found within uploaded rows.', [
+                'row' => $rowNumber,
+                'duplicate_key' => $duplicateKey,
+            ]);
             return true;
         }
 
-        return Expense::where('expense_date', $date)
-            ->where('expense_amount', $amount)
-            ->whereHas('supplier', function ($query) use ($supplierBusinessName) {
-                $query->where('supplier_business_name', $supplierBusinessName);
-            })
-            ->exists();
+        $normalizedDescription = $this->normalizeMatchText($description);
+        $amountFrom = round($amount - 0.01, 2);
+        $amountTo = round($amount + 0.01, 2);
+
+        $candidates = Expense::where('expense_date', $date)
+            ->whereBetween('expense_amount', [$amountFrom, $amountTo])
+            ->get()
+            ->filter(function ($expense) use ($supplierId, $normalizedDescription) {
+                $descriptionMatches = $normalizedDescription !== ''
+                    && (
+                        $this->normalizeMatchText((string) $expense->expense_description) === $normalizedDescription
+                        || $this->normalizeMatchText((string) $expense->supplier_invoice_number) === $normalizedDescription
+                    );
+
+                if ($descriptionMatches) {
+                    return true;
+                }
+
+                return $supplierId && (int) $expense->supplier_id === (int) $supplierId;
+            });
+
+        $existingExpense = $candidates->first();
+
+        Log::info('ImportExpenseFromKey normalized duplicate DB check.', [
+            'row' => $rowNumber,
+            'supplier_id' => $supplierId,
+            'date' => $date,
+            'amount' => $amount,
+            'amount_from' => $amountFrom,
+            'amount_to' => $amountTo,
+            'normalized_description' => $normalizedDescription,
+            'candidate_ids' => $candidates->pluck('id')->values()->all(),
+            'existing_expense_id' => $existingExpense ? $existingExpense->id : null,
+        ]);
+
+        return $existingExpense !== null;
     }
 
-    private function duplicateKey(string $supplierBusinessName, string $date, float $amount): string
+    private function duplicateKey($matchValue, string $date, float $amount): string
     {
-        return $this->normalizeMatchText($supplierBusinessName) . '|' . $date . '|' . number_format($amount, 2, '.', '');
+        return $this->normalizeMatchText((string) $matchValue) . '|' . $date . '|' . number_format($amount, 2, '.', '');
     }
 }

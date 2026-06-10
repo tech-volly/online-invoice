@@ -89,7 +89,8 @@ class ExpenseController extends Controller
                 $query->orderBy($columns[$orderColumnIndex], $orderDir);
             }
         } else {
-            $query->orderBy('expenses.id', 'asc');
+            $query->orderBy('expenses.expense_date', 'desc')
+                ->orderBy('expenses.id', 'desc');
         }
 
         $expenses = $query->skip($start)

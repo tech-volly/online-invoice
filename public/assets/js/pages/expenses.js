@@ -2,7 +2,7 @@ $(document).ready(function () {
     if ($('#expenseDataTable').length > 0) {
         var expenseTable = $('#expenseDataTable').DataTable({
             "bFilter": true,
-            "aaSorting": [],
+            "aaSorting": [[4, "desc"]],
             'columnDefs': [{
                 'targets': [0, 8, 9],
                 'orderable': false,

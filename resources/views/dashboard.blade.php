@@ -566,7 +566,13 @@
                                         @else
                                             <span class="badge badge-danger">
                                                 <i class="fa fa-arrow-down"></i>
-                                                {{ number_format(abs($data['total_revenue_difference'] / $data['total_previous_revenue'] * 100), 2) }}%
+                                                {{ !empty($data['total_previous_revenue'])
+                                                    ? number_format(
+                                                        abs($data['total_revenue_difference'] / $data['total_previous_revenue'] * 100),
+                                                        2
+                                                    ) . '%'
+                                                    : '0%'
+                                                }}
                                             </span>
                                         @endif
                                     </div>

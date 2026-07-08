@@ -53,7 +53,7 @@ class ExpenseController extends Controller
             4 => 'expenses.expense_date',
             5 => 'expenses.expense_amount',
             6 => 'expenses.expense_tax',
-            7 => 'expenses.payment_method_id',
+            7 => 'payment_methods.payment_method_name',
             8 => 'expenses.supplier_expense_category'
         ];
 
@@ -64,7 +64,16 @@ class ExpenseController extends Controller
         $query = Expense::with('supplier')
             ->leftJoin('projects', 'expenses.project_id', '=', 'projects.id')
             ->leftJoin('suppliers', 'expenses.supplier_id', '=', 'suppliers.id')
-            ->select('expenses.*', 'projects.name as project_name', 'suppliers.supplier_business_name');
+            ->leftJoin('payment_methods', function ($join) {
+                $join->on('expenses.payment_method_id', '=', 'payment_methods.id')
+                    ->whereNull('payment_methods.deleted_at');
+            })
+            ->select(
+                'expenses.*',
+                'projects.name as project_name',
+                'suppliers.supplier_business_name',
+                'payment_methods.payment_method_name'
+            );
 
         $totalData = $query->count();
 
@@ -74,6 +83,7 @@ class ExpenseController extends Controller
                 $q->where('suppliers.supplier_business_name', 'LIKE', "%{$search}%")
                     ->orWhere('expenses.supplier_invoice_number', 'LIKE', "%{$search}%")
                     ->orWhere('projects.name', 'LIKE', "%{$search}%")
+                    ->orWhere('payment_methods.payment_method_name', 'LIKE', "%{$search}%")
                     ->orWhere('expenses.expense_amount', 'LIKE', "%{$search}%");
             });
         }
@@ -167,7 +177,7 @@ class ExpenseController extends Controller
                 'expense_date' => getFormatedDate($v->expense_date),
                 'amount' => getPrice($v->expense_amount),
                 'gst' => getGstPriceForExpense($v->expense_tax, $v->expense_amount),
-                'payment_method' => getPaymentMethodName($v->payment_method_id),
+                'payment_method' => $v->payment_method_name ?? '',
                 'category' => getExpenseCategory($v->supplier_expense_category),
                 'receipt' => $receiptHtml,
                 'action' => $action // your dropdown HTML
